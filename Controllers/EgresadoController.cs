@@ -1,8 +1,7 @@
-using System.Security.Claims;
 using GraduatesPortalAPI;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 
 namespace UsersAPI.Controllers;
 
@@ -15,10 +14,12 @@ public class EgresadoController : Controller
     public IResult Busqueda(String valor, int limit,int offset){
 
         PortalEgresadosContext? context = null;
+        IDbContextTransaction? transaction = null;
 
         try
         {
             context = new PortalEgresadosContext();
+            transaction = context.Database.BeginTransaction();
 
             var busqueda = context
                 .Egresados
@@ -28,13 +29,17 @@ public class EgresadoController : Controller
                 .Take(limit)
                 .ToList();
 
-            var Egresado = new List<Egresado>();
+            // Verificando si existe algun usuario con ese valor. Si no existe, la operacion debe ser abortada
+            if (busqueda.Any())
+            {
+                transaction.Rollback();
 
-            if (Egresado.Any()){
+                var error = new ErrorMsg(0, $"No existe el Egresado con el nombre '{valor}'");
 
-                
-                return null;
+                return Results.Json(data: error, statusCode: StatusCodes.Status400BadRequest);
             }
+
+            var Egresado = new List<Egresado>();
 
             foreach (var item in busqueda){
 
@@ -82,16 +87,30 @@ public class EgresadoController : Controller
                 statusCode: StatusCodes.Status200OK
             );
         }
-        
-                catch (Exception ex)
+
+        catch (Exception ex)
+
         {
             Console.Error.WriteLine(ex.Message);
 
+            transaction?.Rollback();
+
+            var error = new ErrorMsg(
+                0,
+                "Error no esperado"
+            );
+
             return Results.Json(
-                data: new ErrorResult(0, "Unexpected server error"),
+                data: error,
                 statusCode: StatusCodes.Status500InternalServerError
             );
         }
+        finally
+        {
+            transaction?.Dispose();
+            context?.Dispose();
+        }
+
     }
 
     [HttpGet("BusquedaId")]
@@ -229,6 +248,236 @@ public class EgresadoController : Controller
 
         return null;
 
+
+    }
+
+    [HttpPost]
+    public IResult Agregar(EgresadoPOSTDTO egresado)
+    {
+        PortalEgresadosContext? context = null;
+        IDbContextTransaction? transaction = null;
+
+        try
+        {
+            context = new PortalEgresadosContext();
+            transaction = context.Database.BeginTransaction();
+
+            // Verificando si existe la nacionalidad. Si no existe, la operacion debe ser abortada
+            var nacionalidad = context
+                .Pais
+                .FirstOrDefault(n => n.Nombre == egresado.Nacionalidad);
+
+            if (nacionalidad == null)
+            {
+                transaction.Rollback();
+
+                var error = new ErrorMsg(0, $"No existe la nacionalidad con el nombre '{egresado.Nacionalidad}'");
+
+                return Results.Json(data: error, statusCode: StatusCodes.Status400BadRequest);
+            }
+
+            // Verificando si existe la provincia. Si no existe, la operacion debe ser abortada
+            var provincia = context
+                .Ciudad
+                .FirstOrDefault(c => c.Nombre == egresado.Provincia.ToUpper());
+
+            if (provincia == null)
+            {
+                transaction.Rollback();
+
+                var error = new ErrorMsg(0, $"No existe la provincia con el nombre '{egresado.Provincia}'");
+
+                return Results.Json(data: error, statusCode: StatusCodes.Status400BadRequest);
+            }
+
+            // Verificando si existe el rol. Si no existe, la operacion debe ser abortada
+            var rol = context
+                .Rols
+                .FirstOrDefault(r => r.Nombre == egresado.Rol.ToUpper());
+
+            if (rol == null)
+            {
+                transaction.Rollback();
+
+                var error = new ErrorMsg(0, $"No existe el rol '{egresado.Rol}'");
+
+                return Results.Json(data: error, statusCode: StatusCodes.Status400BadRequest);
+            }
+
+
+            // Verificando si existe el tipo de participante. Si no existe, la operacion debe ser abortada
+            var tipoParticipante = context
+                .TipoParticipantes
+                .FirstOrDefault(t => t.Nombre == egresado.TipoParticipante);
+
+            if (tipoParticipante == null)
+            {
+                transaction.Rollback();
+
+                var error = new ErrorMsg(0, $"No existe el tipo de participante '{egresado.TipoParticipante}'");
+
+                return Results.Json(data: error, statusCode: StatusCodes.Status400BadRequest);
+            }
+
+            // Verificando si ya existe un usuario con el mismo nombre. En dicho caso, la operacion debe ser abortada
+            var existeUsuario = context
+                .Usuarios
+                .Where(u => EF.Functions.Like(u.UserName, $"%{egresado.UserName}%"))
+                .ToList()
+                .Count >= 1;
+
+            if (existeUsuario)
+            {
+                transaction.Rollback();
+
+                var error = new ErrorMsg(0, $"Ya existe un usuario con el nombre '{egresado.UserName}'");
+
+                return Results.Json(data: error, statusCode: StatusCodes.Status400BadRequest);
+            }
+
+            // Creando el usuario
+            var usuario = new Usuario
+            {
+                RolId = rol.RolId,
+                UserName = egresado.UserName,
+                Password = egresado.Password
+            };
+
+            var resultUsuario = context
+                .Usuarios
+                .Add(usuario);
+
+            if (resultUsuario == null)
+            {
+                transaction.Rollback();
+
+                var error = new ErrorMsg(0, $"Error inesperado");
+
+                return Results.Json(data: error, statusCode: StatusCodes.Status500InternalServerError);
+            }
+
+            context.SaveChanges();
+
+            usuario.UsuarioId = resultUsuario.Entity.UsuarioId;
+
+            // Creando la direccion
+            var municipio = context
+                .LocalidadPostal
+                .FirstOrDefault(m => m.CiudadId == provincia.CiudadId);
+
+
+            if (municipio == null)
+            {
+                transaction.Rollback();
+
+                var error = new ErrorMsg(0, $"No se pudo obtener informacion del municipio");
+
+                return Results.Json(data: error, statusCode: StatusCodes.Status500InternalServerError);
+            }
+
+            var direccion = new Direccion
+            {
+                LocalidadPostalId = municipio.LocalidadPostalId
+            };
+
+            var resultDireccion = context
+                .Direccions
+                .Add(direccion);
+
+            context.SaveChanges();
+
+            if (resultDireccion == null)
+            {
+                transaction.Rollback();
+
+                var error = new ErrorMsg(0, $"Error inesperado");
+
+                return Results.Json(data: error, statusCode: StatusCodes.Status500InternalServerError);
+            }
+
+            direccion.DireccionId = resultDireccion.Entity.DireccionId;
+
+            // Creando participante
+            var participante = new Participante
+            {
+                TipoParticipanteId = tipoParticipante.TipoParticipanteId,
+                UsuarioId = usuario.UsuarioId,
+                EsEgresado = false,
+                DireccionId = direccion.DireccionId
+            };
+
+            var resultParticipante = context
+                .Participantes
+                .Add(participante);
+
+            if (resultParticipante == null)
+            {
+                transaction.Rollback();
+
+                var error = new ErrorMsg(0, $"Error inesperado");
+
+                return Results.Json(data: error, statusCode: StatusCodes.Status500InternalServerError);
+            }
+
+            context.SaveChanges();
+
+            participante.ParticipanteId = resultParticipante.Entity.ParticipanteId;
+
+            // Creando egresado
+            var nuevoEgresado = new Egresado
+            {
+                ParticipanteId = participante.ParticipanteId,
+                Nacionalidad = nacionalidad.PaisId,
+                PrimerNombre = egresado.PrimerNombre,
+                SegundoNombre = egresado.SegundoNombre,
+                PrimerApellido = egresado.PrimerApellido,
+                SegundoApellido = egresado.SegundoApellido,
+                Genero = egresado.Genero,
+                FechaNac = egresado.FechaNacimiento,
+                MatriculaEgresado = egresado.MatriculaEgresado,
+                MatriculaGrado = egresado.MatriculaGrado
+            };
+
+            var resultEgresado = context
+                .Egresados
+                .Add(nuevoEgresado);
+
+            if (resultEgresado == null)
+            {
+                transaction.Rollback();
+
+                var error = new ErrorMsg(0, $"Error inesperado");
+
+                return Results.Json(data: error, statusCode: StatusCodes.Status500InternalServerError);
+            }
+
+            context.SaveChanges();
+
+            transaction.Commit();
+
+            return Results.Ok(resultEgresado.Entity.EgresadoId);
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine(ex.Message);
+
+            transaction?.Rollback();
+
+            var error = new ErrorMsg(
+                0,
+                "Error no esperado"
+            );
+
+            return Results.Json(
+                data: error,
+                statusCode: StatusCodes.Status500InternalServerError
+            );
+        }
+        finally
+        {
+            transaction?.Dispose();
+            context?.Dispose();
+        }
     }
 
 }

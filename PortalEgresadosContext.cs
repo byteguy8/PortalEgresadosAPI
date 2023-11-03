@@ -17,7 +17,7 @@ public partial class PortalEgresadosContext : DbContext
 
     public virtual DbSet<AccionUsuario> AccionUsuarios { get; set; }
 
-    public virtual DbSet<Ciudad> Ciudads { get; set; }
+    public virtual DbSet<Ciudad> Ciudad { get; set; }
 
     public virtual DbSet<Contacto> Contactos { get; set; }
 
@@ -43,7 +43,7 @@ public partial class PortalEgresadosContext : DbContext
 
     public virtual DbSet<Idioma> Idiomas { get; set; }
 
-    public virtual DbSet<LocalidadPostal> LocalidadPostals { get; set; }
+    public virtual DbSet<LocalidadPostal> LocalidadPostal { get; set; }
 
     public virtual DbSet<LogUsuario> LogUsuarios { get; set; }
 
