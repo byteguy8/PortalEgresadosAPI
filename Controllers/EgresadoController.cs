@@ -117,20 +117,31 @@ public class EgresadoController : Controller
     public IResult BusquedaId(int IdEgresado){
 
         PortalEgresadosContext? context = null;
+        IDbContextTransaction? transaction = null;
 
         try
         {
             context = new PortalEgresadosContext();
+            transaction = context.Database.BeginTransaction();
 
             var busqueda = context
                 .Egresados
                 .Where(b => b.EgresadoId == IdEgresado)
+                .Include(e => e.Participante)
+                .Include(e => e.NacionalidadNavigation)
                 .OrderBy(b => b.PrimerNombre)
                 .ToList();
 
-            var Egresado = new List<Egresado>();
+            if (!busqueda.Any())
+            {
+                transaction.Rollback();
 
+                var error = new ErrorMsg(0, $"No existe el Egresado con el ID '{IdEgresado}'");
 
+                return Results.Json(data: error, statusCode: StatusCodes.Status400BadRequest);
+            }
+
+            var Egresado = new List<dynamic>();
 
             foreach (var item in busqueda){
 
@@ -144,11 +155,11 @@ public class EgresadoController : Controller
                 var FechaNac = item.FechaNac;
                 var FotoPerfilUrl = item.Participante.FotoPerfilUrl;
                 var Nacionalidad = item.NacionalidadNavigation.Nombre;
-                var EgresadoIdioma = item.EgresadoIdiomas;
-                var ExperienciaLaboral = item.ExperienciaLaborals;
-                var Educacion = item.Educacions;
+                var EgresadoIdioma = context.EgresadoIdiomas.Where(i => i.EgresadoId == item.EgresadoId).Include(i => i.Idioma).ToList();
+                var ExperienciaLaboral = context.ExperienciaLaborals.Where(e => e.EgresadoId == item.EgresadoId).ToList();
+                var Educacion = context.Educacions.Where(e => e.EgresadoId == item.EgresadoId).Include(e => e.Formacion).ToList();
+                var EgresadoHabilidad = context.EgresadoHabilidads.Where(eh => eh.EgresadoId == item.EgresadoId).Include(eh => eh.Habilidad).ToList();
                 var Contacto = item.Participante.Contactos;
-                var EgresadoHabilidad = item.EgresadoHabilidads;
 
 
                 dynamic Egresados = new
@@ -181,7 +192,7 @@ public class EgresadoController : Controller
         
                 catch (Exception ex)
         {
-            Console.Error.WriteLine(ex.Message);
+            Console.Error.WriteLine(ex.ToString());
 
             return Results.Json(
                 data: new ErrorResult(0, "Unexpected server error"),
@@ -459,7 +470,7 @@ public class EgresadoController : Controller
         }
         catch (Exception ex)
         {
-            Console.Error.WriteLine(ex.Message);
+            Console.Error.WriteLine(ex.ToString());
 
             transaction?.Rollback();
 
