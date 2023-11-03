@@ -9,7 +9,7 @@ namespace UsersAPI.Controllers;
 [ApiController]
 [Route("[controller]")]
 
-public class GraduateController : Controller
+public class EgresadoController : Controller
 {
     [HttpGet("Busqueda")]
     public IResult Busqueda(String valor, int limit,int offset){
