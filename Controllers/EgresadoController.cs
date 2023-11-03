@@ -225,55 +225,9 @@ public class EgresadoController : Controller
     }
 
     [HttpPost("EgresadoIdioma")]
-    public IResult PostEgresadoIdioma(int IdEgresado){
+    public IResult PostEgresadoIdioma(int EgresadoId, int IdiomaId){
 
-        PortalEgresadosContext? context = null;
-
-        try
-        {
-            context = new PortalEgresadosContext();
-
-            var getidiomas = context
-            .Egresados
-            .Where(e => e.EgresadoId == IdEgresado)
-            .SelectMany(e => e.EgresadoIdiomas)
-            .Select(ei => ei.Idioma)
-            .ToList();
-
-            var idiomas = new List<Idioma>();
-
-            foreach (var item in getidiomas){
-
-                var idiomaId = item.IdiomaId;
-                var Egreidioma = item.Nombre;
-
-                var idioma = new Idioma
-                {
-                    IdiomaId = idiomaId,
-                    Nombre = Egreidioma
-
-                };
-
-                idiomas.Add(idioma);
-        
-            }
-
-            return Results.Json(
-                data: idiomas,
-                statusCode: StatusCodes.Status200OK
-            );
-
-        }
-        catch (Exception ex)
-        {
-            Console.Error.WriteLine(ex.Message);
-
-            return Results.Json(
-                data: new ErrorResult(0, "Unexpected server error"),
-                statusCode: StatusCodes.Status500InternalServerError
-            );
-
-        }
+        return null;
 
     }
 
