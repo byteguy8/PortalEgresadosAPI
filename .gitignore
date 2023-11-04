@@ -1,0 +1,12 @@
+# .NET Core
+## Built application files
+*.dll
+*.exe
+*.pdb
+*.dll.config
+
+## .NET Core
+obj/
+bin/
+
+.vscode
