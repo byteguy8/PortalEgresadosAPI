@@ -8,7 +8,7 @@ namespace PortalEgresadosAPI.Controllers;
 [Route("[controller]")]
 public class IdiomaEgresadoController : ControllerBase{
 
-        [HttpGet]
+    [HttpGet]
     public IResult ObtenerIdiomas()
     {
         PortalEgresadosContext? context = null;
@@ -114,7 +114,7 @@ public class IdiomaEgresadoController : ControllerBase{
     }
 
     [HttpGet("{egresadoId}")]
-    public IResult IdiomaEgresado(int IdEgresado)
+    public IResult IdiomaEgresado(int egresadoId)
     {
 
         PortalEgresadosContext? context = null;
@@ -125,7 +125,7 @@ public class IdiomaEgresadoController : ControllerBase{
 
             var EgresadoIdiomas = context
                     .EgresadoIdiomas
-                    .Where(i => i.EgresadoId == IdEgresado)
+                    .Where(i => i.EgresadoId == egresadoId)
                     .Include(i => i.Idioma)
                     .ToList();
 
@@ -162,8 +162,8 @@ public class IdiomaEgresadoController : ControllerBase{
 
     }
 
-    [HttpPost("{egresadoId}/{IdiomaId}")]
-    public IResult PostIdiomaEgresado(EgresadoIdiomaPOSTDTO egresadoIdioma)
+    [HttpPost("{egresadoId}/{idiomaId}")]
+    public IResult PostIdiomaEgresado(int egresadoId, int idiomaId)
     {
 
         PortalEgresadosContext? context = null;
@@ -178,8 +178,8 @@ public class IdiomaEgresadoController : ControllerBase{
             var AgregaIdioma = new EgresadoIdioma
             {
 
-                EgresadoId = egresadoIdioma.EgresadoId,
-                IdiomaId = egresadoIdioma.IdiomaId
+                EgresadoId = egresadoId,
+                IdiomaId = idiomaId
 
             };
 
@@ -225,7 +225,7 @@ public class IdiomaEgresadoController : ControllerBase{
     }
 
     [HttpDelete("{EgresadoIdiomaId}")]
-    public IResult DeleteIdiomaEgresado(EgresadoIdiomaDeleteDTO egresadoIdioma)
+    public IResult DeleteIdiomaEgresado(int EgresadoIdiomaId)
     {
 
         PortalEgresadosContext? context = null;
@@ -240,7 +240,7 @@ public class IdiomaEgresadoController : ControllerBase{
             var EliminaIdioma = new EgresadoIdioma
             {
 
-                EgresadoIdiomaId = egresadoIdioma.EgresadoIdiomaId
+                EgresadoIdiomaId = EgresadoIdiomaId
 
             };
 
