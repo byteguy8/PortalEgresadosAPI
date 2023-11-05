@@ -780,9 +780,7 @@ public class EgresadoController : Controller
             {
                 transaction.Rollback();
 
-                var error = new ErrorMsg(0, $"No existe el Egresado con Nombre '{valor}'");
-
-                return Results.Json(data: error, statusCode: StatusCodes.Status400BadRequest);
+                return Results.Json(data: busqueda, statusCode: StatusCodes.Status400BadRequest);
             }
 
             var Egresado = new List<dynamic>();
@@ -804,9 +802,9 @@ public class EgresadoController : Controller
                     {
                         documentoId = documentos.DocumentoId,
                         participanteId = documentos.ParticipanteId,
-                        tipodocId = documentos.TipoDocumentoId,
+                        tipoDocId = documentos.TipoDocumentoId,
                         documentoNo = documentos.DocumentoNo,
-                        tipodoc = documentos.TipoDocumento.Nombre
+                        tipoDoc = documentos.TipoDocumento.Nombre
 
                     };
 
@@ -829,9 +827,9 @@ public class EgresadoController : Controller
                     {
                         contactoId = contactos.ContactoId,
                         participanteId = contactos.ParticipanteId,
-                        tipocontactoId = contactos.TipoContactoId,
+                        tipoContactoId = contactos.TipoContactoId,
                         nombre = contactos.Nombre,
-                        tipocontacto = contactos.TipoContacto.Nombre
+                        tipoContacto = contactos.TipoContacto.Nombre
 
                     };
 
@@ -873,8 +871,8 @@ public class EgresadoController : Controller
                         id = experienciaLaboral.ExperienciaLaboralId,
                         organizacion = experienciaLaboral.Organizacion,
                         posicion = experienciaLaboral.Posicion,
-                        fechaentrada = experienciaLaboral.FechaEntrada,
-                        fechasalida = experienciaLaboral.FechaSalida
+                        fechantrada = experienciaLaboral.FechaEntrada,
+                        fechaSalida = experienciaLaboral.FechaSalida
 
                     };
 
@@ -944,7 +942,7 @@ public class EgresadoController : Controller
 
                         dynamic ed = new
                         {
-                            observacion = edestacado.Observacion,
+                            Observacion = edestacado.Observacion,
                             FechaDesde = edestacado.FechaDesde,
                             FechaHasta = edestacado.FechaHasta,
                             egresadoDestacado
@@ -1059,7 +1057,7 @@ public class EgresadoController : Controller
 
                 var error = new ErrorMsg(0, $"No existe el Egresado con el ID '{IdEgresado}'");
 
-                return Results.Json(data: error, statusCode: StatusCodes.Status400BadRequest);
+                return Results.Json(data: busqueda, statusCode: StatusCodes.Status400BadRequest);
             }
 
             var Egresado = new List<dynamic>();
@@ -1081,9 +1079,9 @@ public class EgresadoController : Controller
                     {
                         documentoId = documentos.DocumentoId,
                         participanteId = documentos.ParticipanteId,
-                        tipodocId = documentos.TipoDocumentoId,
+                        tipoDocId = documentos.TipoDocumentoId,
                         documentoNo = documentos.DocumentoNo,
-                        tipodoc = documentos.TipoDocumento.Nombre
+                        tipoDoc = documentos.TipoDocumento.Nombre
 
                     };
 
@@ -1106,9 +1104,9 @@ public class EgresadoController : Controller
                     {
                         contactoId = contactos.ContactoId,
                         participanteId = contactos.ParticipanteId,
-                        tipocontactoId = contactos.TipoContactoId,
+                        tipoContactoId = contactos.TipoContactoId,
                         nombre = contactos.Nombre,
-                        tipocontacto = contactos.TipoContacto.Nombre
+                        tipoContacto = contactos.TipoContacto.Nombre
 
                     };
 
@@ -1150,8 +1148,8 @@ public class EgresadoController : Controller
                         id = experienciaLaboral.ExperienciaLaboralId,
                         organizacion = experienciaLaboral.Organizacion,
                         posicion = experienciaLaboral.Posicion,
-                        fechaentrada = experienciaLaboral.FechaEntrada,
-                        fechasalida = experienciaLaboral.FechaSalida
+                        fechaEntrada = experienciaLaboral.FechaEntrada,
+                        fechaSalida = experienciaLaboral.FechaSalida
 
                     };
 
@@ -1306,179 +1304,6 @@ public class EgresadoController : Controller
                 statusCode: StatusCodes.Status500InternalServerError
             );
         }
-    }
-
-    [HttpGet("EgresadoIdioma")]
-    public IResult EgresadoIdioma(int IdEgresado)
-    {
-
-        PortalEgresadosContext? context = null;
-
-        try
-        {
-            context = new PortalEgresadosContext();
-
-            var EgresadoIdiomas = context
-                    .EgresadoIdiomas
-                    .Where(i => i.EgresadoId == IdEgresado)
-                    .Include(i => i.Idioma)
-                    .ToList();
-
-            var Idiomas = new List<dynamic>();
-
-            foreach (var idioma in EgresadoIdiomas)
-            {
-                dynamic i = new
-                {
-                    id = idioma.IdiomaId,
-                    nombre = idioma.Idioma.Nombre,
-                    egresadIdiomaId = idioma.EgresadoIdiomaId
-                };
-
-                Idiomas.Add(i);
-            }
-
-            return Results.Json(
-                data: Idiomas,
-                statusCode: StatusCodes.Status200OK
-            );
-
-        }
-        catch (Exception ex)
-        {
-            Console.Error.WriteLine(ex.Message);
-
-            return Results.Json(
-                data: new ErrorResult(0, "Unexpected server error"),
-                statusCode: StatusCodes.Status500InternalServerError
-            );
-
-        }
-
-    }
-
-    [HttpPost("EgresadoIdioma")]
-    public IResult PostEgresadoIdioma(EgresadoIdiomaPOSTDTO egresadoIdioma)
-    {
-
-        PortalEgresadosContext? context = null;
-        IDbContextTransaction? transaction = null;
-
-        try
-        {
-
-            context = new PortalEgresadosContext();
-            transaction = context.Database.BeginTransaction();
-
-            var AgregaIdioma = new EgresadoIdioma
-            {
-
-                EgresadoId = egresadoIdioma.EgresadoId,
-                IdiomaId = egresadoIdioma.IdiomaId
-
-            };
-
-            var resultAddIdioma = context
-                .EgresadoIdiomas
-                .Add(AgregaIdioma);
-
-            if (resultAddIdioma == null)
-            {
-                transaction.Rollback();
-
-                var error = new ErrorMsg(0, $"Error inesperado");
-
-                return Results.Json(data: error, statusCode: StatusCodes.Status500InternalServerError);
-            }
-
-            context.SaveChanges();
-
-            transaction.Commit();
-
-            return Results.Ok(resultAddIdioma.Entity.EgresadoIdiomaId);
-
-        }
-        catch (Exception ex)
-        {
-            Console.Error.WriteLine(ex.ToString());
-
-            transaction?.Rollback();
-
-            var error = new ErrorMsg(0, "Error no esperado");
-
-            return Results.Json(
-                data: error,
-                statusCode: StatusCodes.Status500InternalServerError
-            );
-        }
-        finally
-        {
-
-            transaction?.Dispose();
-            context?.Dispose();
-        }
-    }
-
-    [HttpDelete("EgresadoIdioma")]
-    public IResult DeleteEgresadoIdioma(EgresadoIdiomaDeleteDTO egresadoIdioma)
-    {
-
-        PortalEgresadosContext? context = null;
-        IDbContextTransaction? transaction = null;
-
-        try
-        {
-
-            context = new PortalEgresadosContext();
-            transaction = context.Database.BeginTransaction();
-
-            var EliminaIdioma = new EgresadoIdioma
-            {
-
-                EgresadoIdiomaId = egresadoIdioma.EgresadoIdiomaId
-
-            };
-
-            var resultEliminaIdioma = context
-                .EgresadoIdiomas
-                .Remove(EliminaIdioma);
-
-            if (resultEliminaIdioma == null)
-            {
-                transaction.Rollback();
-
-                var error = new ErrorMsg(0, $"Error inesperado");
-
-                return Results.Json(data: error, statusCode: StatusCodes.Status500InternalServerError);
-            }
-
-            context.SaveChanges();
-
-            transaction.Commit();
-
-            return Results.Ok();
-
-        }
-        catch (Exception ex)
-        {
-            Console.Error.WriteLine(ex.ToString());
-
-            transaction?.Rollback();
-
-            var error = new ErrorMsg(0, "Error no esperado");
-
-            return Results.Json(
-                data: error,
-                statusCode: StatusCodes.Status500InternalServerError
-            );
-        }
-        finally
-        {
-
-            transaction?.Dispose();
-            context?.Dispose();
-        }
-
     }
 
 }
