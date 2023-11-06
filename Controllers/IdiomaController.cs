@@ -114,7 +114,7 @@ public class IdiomaController : ControllerBase{
     }
 
     [HttpGet("{egresadoId}")]
-    public IResult IdiomaEgresado(int egresadoId)
+    public dynamic IdiomaEgresado(int egresadoId)
     {
 
         PortalEgresadosContext? context = null;
@@ -143,10 +143,12 @@ public class IdiomaController : ControllerBase{
                 Idiomas.Add(i);
             }
 
-            return Results.Json(
+            return Idiomas;
+
+           /* return Results.Json(
                 data: Idiomas,
                 statusCode: StatusCodes.Status200OK
-            );
+            );*/
 
         }
         catch (Exception ex)

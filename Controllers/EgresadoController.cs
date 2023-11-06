@@ -1054,8 +1054,6 @@ public class EgresadoController : Controller{
             {
                 transaction.Rollback();
 
-                var error = new ErrorMsg(0, $"No existe el Egresado con el ID '{IdEgresado}'");
-
                 return Results.Json(data: busqueda, statusCode: StatusCodes.Status400BadRequest);
             }
 
