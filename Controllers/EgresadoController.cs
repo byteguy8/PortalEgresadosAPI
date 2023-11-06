@@ -9,8 +9,7 @@ using PortalEgresadosAPI;
 [ApiController]
 [Route("[controller]")]
 
-public class EgresadoController : Controller
-{
+public class EgresadoController : Controller{
     private enum TipoIdentidad
     {
         CEDULA,
@@ -753,7 +752,7 @@ public class EgresadoController : Controller
         }
     }
 
-    [HttpGet("Busqueda")]
+    [HttpGet("{valor}/{limit}/{offset}")]
     public IResult Busqueda(String valor, int limit, int offset)
     {
 
@@ -1031,7 +1030,7 @@ public class EgresadoController : Controller
 
     }
 
-    [HttpGet("BusquedaId")]
+    [HttpGet("{IdEgresado}")]
     public IResult BusquedaId(int IdEgresado)
     {
 
