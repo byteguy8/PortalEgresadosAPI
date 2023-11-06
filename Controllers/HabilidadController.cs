@@ -5,7 +5,7 @@ namespace PortalEgresadosAPI.Controllers;
 
 [ApiController]
 [Route("[controller]")]
-public class EgresadosHabilidadController : ControllerBase
+public class HabilidadController : ControllerBase
 {
     [HttpGet]
     public IResult ObtenerHabilidades()

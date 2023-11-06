@@ -6,7 +6,7 @@ namespace PortalEgresadosAPI.Controllers;
 
 [ApiController]
 [Route("[controller]")]
-public class IdiomaEgresadoController : ControllerBase{
+public class IdiomaController : ControllerBase{
 
     [HttpGet]
     public IResult ObtenerIdiomas()
