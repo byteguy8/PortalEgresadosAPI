@@ -32,7 +32,7 @@ public class ExperienciaLaboralController : ControllerBase
                         id = experienciaLaboral.ExperienciaLaboralId,
                         organizacion = experienciaLaboral.Organizacion,
                         posicion = experienciaLaboral.Posicion,
-                        fechantrada = experienciaLaboral.FechaEntrada,
+                        fechaentrada = experienciaLaboral.FechaEntrada,
                         fechaSalida = experienciaLaboral.FechaSalida
 
                     };
