@@ -9,7 +9,7 @@ public class ExperienciaLaboralController : ControllerBase
 {
 
     [HttpGet("{egresadoId}")]
-    public IResult ExperienciaLaboralEgresado(int egresadoId)
+    public async Task<IResult> ExperienciaLaboralEgresado(int egresadoId)
     {
 
         PortalEgresadosContext? context;
@@ -18,30 +18,13 @@ public class ExperienciaLaboralController : ControllerBase
         {
             context = new PortalEgresadosContext();
 
-            var ExperienciaLaborales = context
+            var ExperienciaLaborales = await context
                     .ExperienciaLaborals
                     .Where(e => e.EgresadoId == egresadoId)
-                    .ToList();
-
-                var Experiencias = new List<dynamic>();
-
-                foreach (var experienciaLaboral in ExperienciaLaborales)
-                {
-                    dynamic e = new
-                    {
-                        id = experienciaLaboral.ExperienciaLaboralId,
-                        organizacion = experienciaLaboral.Organizacion,
-                        posicion = experienciaLaboral.Posicion,
-                        fechaentrada = experienciaLaboral.FechaEntrada,
-                        fechaSalida = experienciaLaboral.FechaSalida
-
-                    };
-
-                    Experiencias.Add(e);
-                }
+                    .ToListAsync();
 
             return Results.Json(
-                data: Experiencias,
+                data: ExperienciaLaborales,
                 statusCode: StatusCodes.Status200OK
             );
 
