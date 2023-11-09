@@ -19,6 +19,7 @@
             {
                 ContactoId = 0,
                 ParticipanteId = this.ParticipanteId,
+                TipoContactoId= this.TipoContactoId,
                 Nombre = this.Nombre,
                 Estado = this.Estado,
                 Mostrar = this.Mostrar
