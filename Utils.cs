@@ -1,4 +1,5 @@
 using System.Security.Cryptography;
+using System.Text;
 
 public class Utils
 {
@@ -47,5 +48,11 @@ public class Utils
         );
 
         return pbkdf2.GetBytes(32);
+    }
+
+    public static byte[] HASH256(string input)
+    {
+        byte[] inputBytes = Encoding.UTF8.GetBytes(input);
+        return SHA256.HashData(inputBytes);
     }
 }

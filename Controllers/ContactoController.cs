@@ -18,34 +18,34 @@ public class ContactoController : ControllerBase
         {
             context = new PortalEgresadosContext();
 
-                            var EgresadoContacto = context
-                    .Contactos
-                    .Where(ed => ed.ParticipanteId == egresadoId)
-                    .Include(ed => ed.TipoContacto)
-                    .ToList();
+            var EgresadoContacto = context
+                .Contactos
+                .Where(ed => ed.ParticipanteId == egresadoId)
+                .Include(ed => ed.TipoContacto)
+                .ToList();
 
-                var contacto = new List<dynamic>();
+            var contacto = new List<dynamic>();
 
-                foreach (var contactos in EgresadoContacto)
+            foreach (var contactos in EgresadoContacto)
+            {
+                dynamic c = new
                 {
-                    dynamic c = new
-                    {
-                        contactoId = contactos.ContactoId,
-                        participanteId = contactos.ParticipanteId,
-                        tipoContactoId = contactos.TipoContactoId,
-                        nombre = contactos.Nombre,
-                        tipoContacto = contactos.TipoContacto.Nombre
+                    contactoId = contactos.ContactoId,
+                    participanteId = contactos.ParticipanteId,
+                    tipoContactoId = contactos.TipoContactoId,
+                    nombre = contactos.Nombre,
+                    tipoContacto = contactos.TipoContacto.Nombre
 
-                    };
+                };
 
-                    contacto.Add(c);
+                contacto.Add(c);
 
-                }
+            }
 
-                return Results.Json(
-                data: contacto,
-                statusCode: StatusCodes.Status200OK
-            );
+            return Results.Json(
+            data: contacto,
+            statusCode: StatusCodes.Status200OK
+        );
 
         }
         catch (Exception ex)

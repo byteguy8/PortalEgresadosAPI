@@ -4,6 +4,7 @@ namespace PortalEgresadosAPI;
 [ApiController]
 [Route("[controller]")]
 
-public class UsuarioController : Controller{
+public class UsuarioController : Controller
+{
 
 }

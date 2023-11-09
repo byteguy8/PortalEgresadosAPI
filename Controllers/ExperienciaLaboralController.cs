@@ -19,26 +19,26 @@ public class ExperienciaLaboralController : ControllerBase
             context = new PortalEgresadosContext();
 
             var ExperienciaLaborales = context
-                    .ExperienciaLaborals
-                    .Where(e => e.EgresadoId == egresadoId)
-                    .ToList();
+                .ExperienciaLaborals
+                .Where(e => e.EgresadoId == egresadoId)
+                .ToList();
 
-                var Experiencias = new List<dynamic>();
+            var Experiencias = new List<dynamic>();
 
-                foreach (var experienciaLaboral in ExperienciaLaborales)
+            foreach (var experienciaLaboral in ExperienciaLaborales)
+            {
+                dynamic e = new
                 {
-                    dynamic e = new
-                    {
-                        id = experienciaLaboral.ExperienciaLaboralId,
-                        organizacion = experienciaLaboral.Organizacion,
-                        posicion = experienciaLaboral.Posicion,
-                        fechaentrada = experienciaLaboral.FechaEntrada,
-                        fechaSalida = experienciaLaboral.FechaSalida
+                    id = experienciaLaboral.ExperienciaLaboralId,
+                    organizacion = experienciaLaboral.Organizacion,
+                    posicion = experienciaLaboral.Posicion,
+                    fechaentrada = experienciaLaboral.FechaEntrada,
+                    fechaSalida = experienciaLaboral.FechaSalida
 
-                    };
+                };
 
-                    Experiencias.Add(e);
-                }
+                Experiencias.Add(e);
+            }
 
             return Results.Json(
                 data: Experiencias,
