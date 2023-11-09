@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.5.002.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PortalEgresadosAPI", "PortalEgresadosAPI.csproj", "{03D1CFCE-9279-49E6-A4B5-10A797D211A9}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{03D1CFCE-9279-49E6-A4B5-10A797D211A9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{03D1CFCE-9279-49E6-A4B5-10A797D211A9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{03D1CFCE-9279-49E6-A4B5-10A797D211A9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{03D1CFCE-9279-49E6-A4B5-10A797D211A9}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {A9A3896E-3404-4CD4-8297-C3351519E653}
+	EndGlobalSection
+EndGlobal
