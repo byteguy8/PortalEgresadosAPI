@@ -34,7 +34,8 @@ public class EducacionController : ControllerBase
                     organizacion = educacion.Organizacion,
                     formacionId = educacion.Formacion.FormacionId,
                     nivel = educacion.Formacion.Nombre,
-
+                    fechaEntrada = educacion.FechaEntrada,
+                    fechaSalida = educacion.FechaSalida
                 };
 
                 Educaciones.Add(e);
@@ -51,13 +52,91 @@ public class EducacionController : ControllerBase
             Console.Error.WriteLine(ex.Message);
 
             return Results.Json(
-                data: new ErrorResult(0, "Unexpected server error"),
+                data: new ErrorResult(0, "Error no esperado"),
                 statusCode: StatusCodes.Status500InternalServerError
             );
 
         }
 
 
+    }
+
+    [HttpPost]
+    public IResult AgregarEducacion([FromBody] EducacionPOSTDTO nuevaEducacionDto)
+    {
+        try
+        {
+            using (var context = new PortalEgresadosContext())
+            {
+                var educacionExistente = context.Educacions
+                    .FirstOrDefault(e => e.EgresadoId == nuevaEducacionDto.EgresadoId && e.FormacionId == nuevaEducacionDto.FormacionId);
+
+                if (educacionExistente != null)
+                {
+                    return Results.Json(
+                        data: new ErrorResult(0, "Ya existe un registro con el mismo EgresadoId y FormacionId"),
+                        statusCode: StatusCodes.Status409Conflict
+                    );
+                }
+
+                var nuevaEducacion = new Educacion
+                {
+                    EgresadoId = nuevaEducacionDto.EgresadoId,
+                    FormacionId = nuevaEducacionDto.FormacionId,
+                    FechaEntrada = nuevaEducacionDto.FechaEntrada,
+                    FechaSalida = nuevaEducacionDto.FechaSalida,
+                    Organizacion = nuevaEducacionDto.Organizacion,
+                };
+
+                context.Educacions.Add(nuevaEducacion);
+                context.SaveChanges();
+            }
+
+            return Results.Json(
+                data: nuevaEducacionDto,
+                statusCode: StatusCodes.Status201Created
+            );
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine(ex.Message);
+
+            return Results.Json(
+                data: new ErrorResult(0, "Error no esperado"),
+                statusCode: StatusCodes.Status500InternalServerError
+            );
+        }
+    }
+
+    [HttpDelete("{educacionId}")]
+    public IResult EliminarEducacion(int educacionId)
+    {
+        try
+        {
+            using (var context = new PortalEgresadosContext())
+            {
+                var educacion = context.Educacions.FirstOrDefault(e => e.EducacionId == educacionId);
+                if (educacion != null)
+                {
+                    context.Educacions.Remove(educacion);
+                    context.SaveChanges();
+                }
+            }
+
+            return Results.Json(
+                data: null,
+                statusCode: StatusCodes.Status204NoContent
+            );
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine(ex.Message);
+
+            return Results.Json(
+                data: new ErrorResult(0, "Error no esperado"),
+                statusCode: StatusCodes.Status500InternalServerError
+            );
+        }
     }
 
 }
