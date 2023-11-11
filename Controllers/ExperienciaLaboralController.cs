@@ -43,4 +43,69 @@ public class ExperienciaLaboralController : ControllerBase
 
     }
 
+    [HttpPost]  
+    public async Task<IResult> CreateExperienciaLaboralEgresado([FromBody]ExperienciaLaboralPOSTDTO experienciaLaboral)
+    {
+        try
+        {
+            PortalEgresadosContext context = new PortalEgresadosContext();
+
+            ExperienciaLaboral experienciaLaboralToInsert = experienciaLaboral.Convert();
+
+            await context.ExperienciaLaborals.AddAsync(experienciaLaboralToInsert);
+
+            await context.SaveChangesAsync();
+
+            return Results.Json(
+                  data: experienciaLaboralToInsert.ExperienciaLaboralId,
+                  statusCode: StatusCodes.Status200OK
+              );
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine(ex.Message);
+
+            return Results.Json(
+                data: new ErrorResult(0, "Unexpected server error"),
+                statusCode: StatusCodes.Status500InternalServerError
+            );
+
+        }
+
+
+    }
+
+    [HttpDelete]
+
+    public async Task<IResult> DeleteExperienciaLaboralEgresado([FromQuery]int id)
+    {
+
+        try
+        {
+            PortalEgresadosContext context = new PortalEgresadosContext();
+
+            ExperienciaLaboral experiencia = 
+                await context.ExperienciaLaborals
+                .FirstOrDefaultAsync(experienciaLaboral => experienciaLaboral.ExperienciaLaboralId == id) ?? new();
+
+            context.ExperienciaLaborals.Remove(experiencia);
+
+            await context.SaveChangesAsync();
+
+            return Results.Json(
+                  data: true,
+                  statusCode: StatusCodes.Status200OK
+              );
+        }
+        catch (Exception ex)
+        {
+
+            Console.Error.WriteLine(ex.Message);
+
+            return Results.Json(
+                data: new ErrorResult(0, "Unexpected server error"),
+                statusCode: StatusCodes.Status500InternalServerError
+            );
+        }
+    }
 }
