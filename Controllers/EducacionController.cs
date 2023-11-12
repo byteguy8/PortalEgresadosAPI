@@ -122,7 +122,7 @@ public class EducacionController : ControllerBase
                     context.SaveChanges();
                 }
             }
-
+/*En lugar de regresar un null o no content seria mejor un ok o true.*/
             return Results.Json(
                 data: null,
                 statusCode: StatusCodes.Status204NoContent
