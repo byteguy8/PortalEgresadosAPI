@@ -7,7 +7,8 @@ namespace PortalEgresadosAPI.Controllers;
 [Route("[controller]")]
 public class ExperienciaLaboralController : ControllerBase
 {
-
+/*En los get estas devolviendo todos los datos de la entidad como tal no solo los que te pide 
+el frondent muchos son innecesarios para ellos*/
     [HttpGet("{egresadoId}")]
     public async Task<IResult> ExperienciaLaboralEgresado(int egresadoId)
     {
