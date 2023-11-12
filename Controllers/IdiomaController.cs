@@ -144,12 +144,10 @@ public class IdiomaController : ControllerBase
                 Idiomas.Add(i);
             }
 
-            return Idiomas;
-
-            /* return Results.Json(
+            return Results.Json(
                  data: Idiomas,
                  statusCode: StatusCodes.Status200OK
-             );*/
+             );
 
         }
         catch (Exception ex)
