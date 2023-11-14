@@ -124,8 +124,8 @@ public class EducacionController : ControllerBase
             }
 
             return Results.Json(
-                data: null,
-                statusCode: StatusCodes.Status204NoContent
+                data: true,
+                statusCode: StatusCodes.Status200OK
             );
         }
         catch (Exception ex)
