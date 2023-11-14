@@ -11,6 +11,7 @@ public class ContactoController : ControllerBase
 {
 
     [HttpGet("{egresadoId}")]
+    /*Nombre del Metodo erroneo*/
     public IResult DeleteContactoEgresado(int egresadoId)
     {
 
