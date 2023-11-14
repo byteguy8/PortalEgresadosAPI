@@ -4,12 +4,11 @@ using Microsoft.IdentityModel.Tokens;
 var builder = WebApplication.CreateBuilder(args);
 
 // Added by me
-string key = "zFx5iAfzYwzVs6mdamU9GQ3amdx+iftwkLD70Abq8kEfI77TEUzXgLClzMnFOZml09nnpKpeYkdYRzKNkK+nLg==";
 
 builder.Services.AddAuthorization();
 builder.Services.AddAuthentication("Bearer").AddJwtBearer(opt =>
 {
-    var signingKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key));
+    var signingKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Utils.key));
     var signingCredentials = new SigningCredentials(signingKey, SecurityAlgorithms.HmacSha256Signature);
 
     opt.RequireHttpsMetadata = false;
