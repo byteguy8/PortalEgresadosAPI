@@ -8,7 +8,6 @@
 ## .NET Core
 obj/
 bin/
-V*
 .vscode
 /bin
 /obj

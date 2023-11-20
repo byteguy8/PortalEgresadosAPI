@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace PortalEgresadosAPI;
+namespace PortalEgresadosAPI.Database.Entities;
 
 public partial class VCiudad
 {

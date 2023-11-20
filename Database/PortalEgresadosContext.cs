@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 
-namespace PortalEgresadosAPI;
+namespace PortalEgresadosAPI.Database;
 
 public partial class PortalEgresadosContext : DbContext
 {
@@ -67,13 +67,17 @@ public partial class PortalEgresadosContext : DbContext
 
     public virtual DbSet<VCiudad> VCiudads { get; set; }
 
-    public virtual DbSet<VContactoConTipo> VContactoConTipos { get; set; }
+    public virtual DbSet<VContacto> VContactos { get; set; }
 
     public virtual DbSet<VDireccion> VDireccions { get; set; }
 
-    public virtual DbSet<VEducacionConDetalle> VEducacionConDetalles { get; set; }
+    public virtual DbSet<VEducacion> VEducacions { get; set; }
 
     public virtual DbSet<VEgresado> VEgresados { get; set; }
+
+    public virtual DbSet<VEgresadoDestacado> VEgresadoDestacados { get; set; }
+
+    public virtual DbSet<VEgresadoHabilidad> VEgresadoHabilidads { get; set; }
 
     public virtual DbSet<VEgresadoIdioma> VEgresadoIdiomas { get; set; }
 
@@ -95,13 +99,11 @@ public partial class PortalEgresadosContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.HasDefaultSchema("db_datareader");
-
         modelBuilder.Entity<AccionUsuario>(entity =>
         {
             entity.HasKey(e => e.AccionUsuarioId).HasName("PK_AccionUsuario_AccionUsuarioId");
 
-            entity.ToTable("AccionUsuario", "dbo", tb => tb.HasTrigger("TR_RegistrarLogTransaccionalAccionUsuario"));
+            entity.ToTable("AccionUsuario", tb => tb.HasTrigger("TR_RegistrarLogTransaccionalAccionUsuario"));
 
             entity.HasIndex(e => e.Nombre, "UQ_AccionUsuario_Nombre").IsUnique();
 
@@ -121,7 +123,7 @@ public partial class PortalEgresadosContext : DbContext
         {
             entity.HasKey(e => e.CiudadId).HasName("PK_Ciudad_CiudadId");
 
-            entity.ToTable("Ciudad", "dbo", tb => tb.HasTrigger("TR_RegistrarLogTransaccionalCiudad"));
+            entity.ToTable("Ciudad", tb => tb.HasTrigger("TR_RegistrarLogTransaccionalCiudad"));
 
             entity.Property(e => e.Estado).HasDefaultValueSql("((1))");
             entity.Property(e => e.FechaCreacion)
@@ -144,7 +146,7 @@ public partial class PortalEgresadosContext : DbContext
         {
             entity.HasKey(e => e.ContactoId).HasName("PK_Contacto_ContactoId");
 
-            entity.ToTable("Contacto", "dbo", tb => tb.HasTrigger("TR_RegistrarLogTransaccionalContacto"));
+            entity.ToTable("Contacto", tb => tb.HasTrigger("TR_RegistrarLogTransaccionalContacto"));
 
             entity.HasIndex(e => e.Nombre, "UQ_Contacto_Nombre").IsUnique();
 
@@ -175,7 +177,7 @@ public partial class PortalEgresadosContext : DbContext
         {
             entity.HasKey(e => e.DireccionId).HasName("PK_Direccion_DireccionId");
 
-            entity.ToTable("Direccion", "dbo", tb => tb.HasTrigger("TR_RegistrarLogTransaccionalDireccion"));
+            entity.ToTable("Direccion", tb => tb.HasTrigger("TR_RegistrarLogTransaccionalDireccion"));
 
             entity.Property(e => e.DireccionPrincipal)
                 .HasMaxLength(255)
@@ -199,7 +201,7 @@ public partial class PortalEgresadosContext : DbContext
         {
             entity.HasKey(e => e.DocumentoId).HasName("PK_Documento_DocumentoId");
 
-            entity.ToTable("Documento", "dbo", tb => tb.HasTrigger("TR_RegistrarLogTransaccionalDocumento"));
+            entity.ToTable("Documento", tb => tb.HasTrigger("TR_RegistrarLogTransaccionalDocumento"));
 
             entity.HasIndex(e => e.DocumentoNo, "UQ_Documento_DocumentoNo").IsUnique();
 
@@ -232,7 +234,7 @@ public partial class PortalEgresadosContext : DbContext
         {
             entity.HasKey(e => e.EducacionId).HasName("PK_Educacion_EducacionId");
 
-            entity.ToTable("Educacion", "dbo", tb => tb.HasTrigger("TR_RegistrarLogTransaccionalEducacion"));
+            entity.ToTable("Educacion", tb => tb.HasTrigger("TR_RegistrarLogTransaccionalEducacion"));
 
             entity.HasIndex(e => new { e.EgresadoId, e.FormacionId }, "UQ_Educacion_EgresadoId_FormacionId").IsUnique();
 
@@ -266,7 +268,7 @@ public partial class PortalEgresadosContext : DbContext
         {
             entity.HasKey(e => e.EgresadoId).HasName("PK_Egresado_EgresadoId");
 
-            entity.ToTable("Egresado", "dbo", tb => tb.HasTrigger("TR_RegistrarLogTransaccionalEgresado"));
+            entity.ToTable("Egresado", tb => tb.HasTrigger("TR_RegistrarLogTransaccionalEgresado"));
 
             entity.HasIndex(e => e.ParticipanteId, "UQ_Egresado_ParticipanteId").IsUnique();
 
@@ -318,7 +320,7 @@ public partial class PortalEgresadosContext : DbContext
         {
             entity.HasKey(e => e.EgresadoDestacadoId).HasName("PK_EgresadoDestacado_EgresadoDestacadoId");
 
-            entity.ToTable("EgresadoDestacado", "dbo", tb => tb.HasTrigger("TR_RegistrarLogTransaccionalEgresadoDestacado"));
+            entity.ToTable("EgresadoDestacado", tb => tb.HasTrigger("TR_RegistrarLogTransaccionalEgresadoDestacado"));
 
             entity.Property(e => e.Estado).HasDefaultValueSql("((1))");
             entity.Property(e => e.FechaCreacion)
@@ -341,7 +343,7 @@ public partial class PortalEgresadosContext : DbContext
         {
             entity.HasKey(e => e.EgresadoHabilidadId).HasName("PK_EgresadoHabilidad_EgresadoHabilidadId");
 
-            entity.ToTable("EgresadoHabilidad", "dbo", tb => tb.HasTrigger("TR_RegistrarLogTransaccionalEgresadoHabilidad"));
+            entity.ToTable("EgresadoHabilidad", tb => tb.HasTrigger("TR_RegistrarLogTransaccionalEgresadoHabilidad"));
 
             entity.HasIndex(e => new { e.EgresadoId, e.HabilidadId }, "UQ_EgresadoHabilidad_EgresadoId_HabilidadId").IsUnique();
 
@@ -369,7 +371,7 @@ public partial class PortalEgresadosContext : DbContext
         {
             entity.HasKey(e => e.EgresadoIdiomaId).HasName("PK_EgresadoIdioma_EgresadoIdiomaId");
 
-            entity.ToTable("EgresadoIdioma", "dbo", tb => tb.HasTrigger("TR_RegistrarLogTransaccionalEgresadoIdioma"));
+            entity.ToTable("EgresadoIdioma", tb => tb.HasTrigger("TR_RegistrarLogTransaccionalEgresadoIdioma"));
 
             entity.HasIndex(e => new { e.EgresadoId, e.IdiomaId }, "UQ_EgresadoIdioma_EgresadoId_IdiomaId").IsUnique();
 
@@ -397,7 +399,7 @@ public partial class PortalEgresadosContext : DbContext
         {
             entity.HasKey(e => e.ExperienciaLaboralId).HasName("PK_ExperienciaLaboral_ExperienciaLaboralId");
 
-            entity.ToTable("ExperienciaLaboral", "dbo", tb => tb.HasTrigger("TR_RegistrarLogTransaccionalExperienciaLaboral"));
+            entity.ToTable("ExperienciaLaboral", tb => tb.HasTrigger("TR_RegistrarLogTransaccionalExperienciaLaboral"));
 
             entity.Property(e => e.Acerca).IsUnicode(false);
             entity.Property(e => e.Estado).HasDefaultValueSql("((1))");
@@ -427,7 +429,7 @@ public partial class PortalEgresadosContext : DbContext
         {
             entity.HasKey(e => e.FormacionId).HasName("PK_Formacion_FormacionId");
 
-            entity.ToTable("Formacion", "dbo", tb => tb.HasTrigger("TR_RegistrarLogTransaccionalFormacion"));
+            entity.ToTable("Formacion", tb => tb.HasTrigger("TR_RegistrarLogTransaccionalFormacion"));
 
             entity.Property(e => e.Estado).HasDefaultValueSql("((1))");
             entity.Property(e => e.FechaCreacion)
@@ -450,7 +452,7 @@ public partial class PortalEgresadosContext : DbContext
         {
             entity.HasKey(e => e.HabilidadId).HasName("PK_Habilidad_HabilidadId");
 
-            entity.ToTable("Habilidad", "dbo", tb => tb.HasTrigger("TR_RegistrarLogTransaccionalHabilidad"));
+            entity.ToTable("Habilidad", tb => tb.HasTrigger("TR_RegistrarLogTransaccionalHabilidad"));
 
             entity.HasIndex(e => e.Nombre, "UQ_Habilidad_Nombre").IsUnique();
 
@@ -470,7 +472,7 @@ public partial class PortalEgresadosContext : DbContext
         {
             entity.HasKey(e => e.IdiomaId).HasName("PK_Idioma_IdiomaId");
 
-            entity.ToTable("Idioma", "dbo", tb => tb.HasTrigger("TR_RegistrarLogTransaccionalIdioma"));
+            entity.ToTable("Idioma", tb => tb.HasTrigger("TR_RegistrarLogTransaccionalIdioma"));
 
             entity.HasIndex(e => e.Iso, "UQ_Idioma_ISO").IsUnique();
 
@@ -497,7 +499,7 @@ public partial class PortalEgresadosContext : DbContext
         {
             entity.HasKey(e => e.LocalidadPostalId).HasName("PK_LocalidadPostal_LocalidadPostalId");
 
-            entity.ToTable("LocalidadPostal", "dbo", tb => tb.HasTrigger("TR_RegistrarLogTransaccionalLocalidadPostal"));
+            entity.ToTable("LocalidadPostal", tb => tb.HasTrigger("TR_RegistrarLogTransaccionalLocalidadPostal"));
 
             entity.Property(e => e.CodigoPostal)
                 .HasMaxLength(10)
@@ -523,7 +525,7 @@ public partial class PortalEgresadosContext : DbContext
         {
             entity.HasKey(e => e.LogTransaccionalId).HasName("PK_LogTransaccional_LogTransaccionalID");
 
-            entity.ToTable("LogTransaccional", "dbo");
+            entity.ToTable("LogTransaccional");
 
             entity.Property(e => e.LogTransaccionalId).HasColumnName("LogTransaccionalID");
             entity.Property(e => e.Accion)
@@ -546,7 +548,7 @@ public partial class PortalEgresadosContext : DbContext
         {
             entity.HasKey(e => e.LogUsuarioId).HasName("PK_LogUsuario_LogUsuarioId");
 
-            entity.ToTable("LogUsuario", "dbo", tb => tb.HasTrigger("TR_RegistrarLogTransaccionalLogUsuario"));
+            entity.ToTable("LogUsuario", tb => tb.HasTrigger("TR_RegistrarLogTransaccionalLogUsuario"));
 
             entity.Property(e => e.Estado).HasDefaultValueSql("((1))");
             entity.Property(e => e.FechaCreacion)
@@ -571,7 +573,7 @@ public partial class PortalEgresadosContext : DbContext
         {
             entity.HasKey(e => e.NivelId).HasName("PK_Nivel_NivelId");
 
-            entity.ToTable("Nivel", "dbo", tb => tb.HasTrigger("TR_RegistrarLogTransaccionalNivel"));
+            entity.ToTable("Nivel", tb => tb.HasTrigger("TR_RegistrarLogTransaccionalNivel"));
 
             entity.HasIndex(e => e.Nombre, "UQ_Nivel_Nombre").IsUnique();
 
@@ -592,7 +594,7 @@ public partial class PortalEgresadosContext : DbContext
         {
             entity.HasKey(e => e.PaisId).HasName("PK_Pais_PaisId");
 
-            entity.ToTable("Pais", "dbo", tb => tb.HasTrigger("TR_RegistrarLogTransaccionalPais"));
+            entity.ToTable(tb => tb.HasTrigger("TR_RegistrarLogTransaccionalPais"));
 
             entity.HasIndex(e => e.Iso, "UQ_Pais_ISO").IsUnique();
 
@@ -622,7 +624,7 @@ public partial class PortalEgresadosContext : DbContext
         {
             entity.HasKey(e => e.ParticipanteId).HasName("PK_Participante_ParticipanteId");
 
-            entity.ToTable("Participante", "dbo", tb => tb.HasTrigger("TR_RegistrarLogTransaccionalParticipante"));
+            entity.ToTable("Participante", tb => tb.HasTrigger("TR_RegistrarLogTransaccionalParticipante"));
 
             entity.HasIndex(e => e.UsuarioId, "UQ_Participante_UsuarioId").IsUnique();
 
@@ -658,7 +660,7 @@ public partial class PortalEgresadosContext : DbContext
         {
             entity.HasKey(e => e.RolId).HasName("PK_Rol_RolId");
 
-            entity.ToTable("Rol", "dbo", tb => tb.HasTrigger("TR_RegistrarLogTransaccionalRol"));
+            entity.ToTable("Rol", tb => tb.HasTrigger("TR_RegistrarLogTransaccionalRol"));
 
             entity.HasIndex(e => e.Nombre, "UQ_Rol_Nombre").IsUnique();
 
@@ -678,7 +680,7 @@ public partial class PortalEgresadosContext : DbContext
         {
             entity.HasKey(e => e.TipoContactoId).HasName("PK_TipoContacto_TipoContactoId");
 
-            entity.ToTable("TipoContacto", "dbo", tb => tb.HasTrigger("TR_RegistrarLogTransaccionalTipoContacto"));
+            entity.ToTable("TipoContacto", tb => tb.HasTrigger("TR_RegistrarLogTransaccionalTipoContacto"));
 
             entity.HasIndex(e => e.Nombre, "UQ_TipoContacto_Nombre").IsUnique();
 
@@ -698,7 +700,7 @@ public partial class PortalEgresadosContext : DbContext
         {
             entity.HasKey(e => e.TipoDocumentoId).HasName("PK_TipoDocumento_TipoDocumentoId");
 
-            entity.ToTable("TipoDocumento", "dbo", tb => tb.HasTrigger("TR_RegistrarLogTransaccionalTipoDocumento"));
+            entity.ToTable("TipoDocumento", tb => tb.HasTrigger("TR_RegistrarLogTransaccionalTipoDocumento"));
 
             entity.HasIndex(e => e.Nombre, "UQ_TipoDocumento_Nombre").IsUnique();
 
@@ -718,7 +720,7 @@ public partial class PortalEgresadosContext : DbContext
         {
             entity.HasKey(e => e.TipoParticipanteId).HasName("PK_TipoParticipante_TipoParticipanteId");
 
-            entity.ToTable("TipoParticipante", "dbo", tb => tb.HasTrigger("TR_RegistrarLogTransaccionalTipoParticipante"));
+            entity.ToTable("TipoParticipante", tb => tb.HasTrigger("TR_RegistrarLogTransaccionalTipoParticipante"));
 
             entity.HasIndex(e => e.Nombre, "UQ_TipoParticipante_Nombre").IsUnique();
 
@@ -738,7 +740,7 @@ public partial class PortalEgresadosContext : DbContext
         {
             entity.HasKey(e => e.UsuarioId).HasName("PK_Usuario_UsuarioID");
 
-            entity.ToTable("Usuario", "dbo", tb => tb.HasTrigger("TR_RegistrarLogTransaccionalUsuario"));
+            entity.ToTable("Usuario", tb => tb.HasTrigger("TR_RegistrarLogTransaccionalUsuario"));
 
             entity.HasIndex(e => e.UserName, "UQ_Usuario_UserName").IsUnique();
 
@@ -766,7 +768,7 @@ public partial class PortalEgresadosContext : DbContext
         {
             entity
                 .HasNoKey()
-                .ToView("v_Ciudad", "dbo");
+                .ToView("v_Ciudad");
 
             entity.Property(e => e.NombreCiudad)
                 .HasMaxLength(60)
@@ -776,20 +778,16 @@ public partial class PortalEgresadosContext : DbContext
                 .IsUnicode(false);
         });
 
-        modelBuilder.Entity<VContactoConTipo>(entity =>
+        modelBuilder.Entity<VContacto>(entity =>
         {
             entity
                 .HasNoKey()
-                .ToView("v_ContactoConTipo", "dbo");
+                .ToView("v_Contacto");
 
-            entity.Property(e => e.IdInContacto).HasColumnName("idInContacto");
-            entity.Property(e => e.NombreCompleto)
-                .HasMaxLength(81)
-                .IsUnicode(false);
-            entity.Property(e => e.NombreContacto)
+            entity.Property(e => e.Contacto)
                 .HasMaxLength(60)
                 .IsUnicode(false);
-            entity.Property(e => e.NombreTipoContacto)
+            entity.Property(e => e.TipoContacto)
                 .HasMaxLength(30)
                 .IsUnicode(false);
         });
@@ -798,7 +796,7 @@ public partial class PortalEgresadosContext : DbContext
         {
             entity
                 .HasNoKey()
-                .ToView("v_Direccion", "dbo");
+                .ToView("v_Direccion");
 
             entity.Property(e => e.Ciudad)
                 .HasMaxLength(60)
@@ -817,22 +815,20 @@ public partial class PortalEgresadosContext : DbContext
                 .IsUnicode(false);
         });
 
-        modelBuilder.Entity<VEducacionConDetalle>(entity =>
+        modelBuilder.Entity<VEducacion>(entity =>
         {
             entity
                 .HasNoKey()
-                .ToView("v_EducacionConDetalle", "dbo");
+                .ToView("v_Educacion");
 
             entity.Property(e => e.FechaEntrada).HasColumnType("date");
             entity.Property(e => e.FechaGraduacion).HasColumnType("date");
             entity.Property(e => e.FechaSalida).HasColumnType("date");
-            entity.Property(e => e.IdInEducacion).HasColumnName("idInEducacion");
-            entity.Property(e => e.IdInFormacion).HasColumnName("idInFormacion");
+            entity.Property(e => e.NivelAcademico)
+                .HasMaxLength(30)
+                .IsUnicode(false);
             entity.Property(e => e.NombreFormacion)
                 .HasMaxLength(80)
-                .IsUnicode(false);
-            entity.Property(e => e.NombreNivel)
-                .HasMaxLength(30)
                 .IsUnicode(false);
             entity.Property(e => e.Organizacion)
                 .HasMaxLength(120)
@@ -843,7 +839,7 @@ public partial class PortalEgresadosContext : DbContext
         {
             entity
                 .HasNoKey()
-                .ToView("v_Egresado", "dbo");
+                .ToView("v_Egresado");
 
             entity.Property(e => e.Acerca).IsUnicode(false);
             entity.Property(e => e.Ciudad)
@@ -895,11 +891,36 @@ public partial class PortalEgresadosContext : DbContext
                 .IsUnicode(false);
         });
 
+        modelBuilder.Entity<VEgresadoDestacado>(entity =>
+        {
+            entity
+                .HasNoKey()
+                .ToView("v_EgresadoDestacado");
+
+            entity.Property(e => e.FechaDesde).HasColumnType("date");
+            entity.Property(e => e.FechaHasta).HasColumnType("date");
+            entity.Property(e => e.NombreCompleto)
+                .HasMaxLength(165)
+                .IsUnicode(false);
+            entity.Property(e => e.Observacion).IsUnicode(false);
+        });
+
+        modelBuilder.Entity<VEgresadoHabilidad>(entity =>
+        {
+            entity
+                .HasNoKey()
+                .ToView("v_EgresadoHabilidad");
+
+            entity.Property(e => e.Habilidad)
+                .HasMaxLength(30)
+                .IsUnicode(false);
+        });
+
         modelBuilder.Entity<VEgresadoIdioma>(entity =>
         {
             entity
                 .HasNoKey()
-                .ToView("v_EgresadoIdioma", "dbo");
+                .ToView("v_EgresadoIdioma");
 
             entity.Property(e => e.Idioma)
                 .HasMaxLength(40)
@@ -915,7 +936,7 @@ public partial class PortalEgresadosContext : DbContext
         {
             entity
                 .HasNoKey()
-                .ToView("v_ExperienciaLaboral", "dbo");
+                .ToView("v_ExperienciaLaboral");
 
             entity.Property(e => e.Acerca).IsUnicode(false);
             entity.Property(e => e.FechaEntrada).HasColumnType("date");
@@ -932,7 +953,7 @@ public partial class PortalEgresadosContext : DbContext
         {
             entity
                 .HasNoKey()
-                .ToView("v_LocalidadPostal", "dbo");
+                .ToView("v_LocalidadPostal");
 
             entity.Property(e => e.Ciudad)
                 .HasMaxLength(60)
@@ -952,7 +973,7 @@ public partial class PortalEgresadosContext : DbContext
         {
             entity
                 .HasNoKey()
-                .ToView("v_Nacionalidad", "dbo");
+                .ToView("v_Nacionalidad");
 
             entity.Property(e => e.Id).ValueGeneratedOnAdd();
             entity.Property(e => e.Iso)
@@ -969,7 +990,7 @@ public partial class PortalEgresadosContext : DbContext
         {
             entity
                 .HasNoKey()
-                .ToView("v_Pais", "dbo");
+                .ToView("v_Pais");
 
             entity.Property(e => e.Id).ValueGeneratedOnAdd();
             entity.Property(e => e.Iso)
@@ -986,7 +1007,7 @@ public partial class PortalEgresadosContext : DbContext
         {
             entity
                 .HasNoKey()
-                .ToView("v_Participante", "dbo");
+                .ToView("v_Participante");
 
             entity.Property(e => e.Ciudad)
                 .HasMaxLength(60)
@@ -1021,7 +1042,7 @@ public partial class PortalEgresadosContext : DbContext
         {
             entity
                 .HasNoKey()
-                .ToView("v_ParticipanteDocumento", "dbo");
+                .ToView("v_ParticipanteDocumento");
 
             entity.Property(e => e.DocumentoNo)
                 .HasMaxLength(30)
