@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace PortalEgresadosAPI.Database.Entities;
+namespace PortalEgresadosAPI;
 
 public partial class VDireccion
 {

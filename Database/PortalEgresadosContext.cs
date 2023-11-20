@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 
-namespace PortalEgresadosAPI.Database;
+namespace PortalEgresadosAPI;
 
 public partial class PortalEgresadosContext : DbContext
 {
