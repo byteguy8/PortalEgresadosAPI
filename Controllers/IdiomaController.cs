@@ -91,7 +91,7 @@ public class IdiomaController : ControllerBase
                 dynamic idioma = new
                 {
                     id = rawIdioma.IdiomaId,
-                    habilidad = rawIdioma.Nombre
+                    idioma = rawIdioma.Nombre
                 };
 
                 Idiomas.Add(idioma);
