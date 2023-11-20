@@ -51,7 +51,7 @@ public partial class PortalEgresadosContext : DbContext
 
     public virtual DbSet<Nivel> Nivels { get; set; }
 
-    public virtual DbSet<Pais> Pais { get; set; }
+    public virtual DbSet<Pai> Pais { get; set; }
 
     public virtual DbSet<Participante> Participantes { get; set; }
 
@@ -67,23 +67,27 @@ public partial class PortalEgresadosContext : DbContext
 
     public virtual DbSet<VCiudad> VCiudads { get; set; }
 
-    //public virtual DbSet<VDireccion> VDireccions { get; set; }
+    public virtual DbSet<VContactoConTipo> VContactoConTipos { get; set; }
 
-    //public virtual DbSet<VEgresado> VEgresados { get; set; }
+    public virtual DbSet<VDireccion> VDireccions { get; set; }
 
-    //public virtual DbSet<VEgresadoIdioma> VEgresadoIdiomas { get; set; }
+    public virtual DbSet<VEducacionConDetalle> VEducacionConDetalles { get; set; }
 
-    //public virtual DbSet<VExperienciaLaboral> VExperienciaLaborals { get; set; }
+    public virtual DbSet<VEgresado> VEgresados { get; set; }
 
-    //public virtual DbSet<VLocalidadPostal> VLocalidadPostals { get; set; }
+    public virtual DbSet<VEgresadoIdioma> VEgresadoIdiomas { get; set; }
 
-    //public virtual DbSet<VNacionalidad> VNacionalidads { get; set; }
+    public virtual DbSet<VExperienciaLaboral> VExperienciaLaborals { get; set; }
 
-    //public virtual DbSet<VPais> VPais { get; set; }
+    public virtual DbSet<VLocalidadPostal> VLocalidadPostals { get; set; }
 
-    //public virtual DbSet<VParticipante> VParticipantes { get; set; }
+    public virtual DbSet<VNacionalidad> VNacionalidads { get; set; }
 
-    //public virtual DbSet<VParticipanteDocumento> VParticipanteDocumentos { get; set; }
+    public virtual DbSet<VPai> VPais { get; set; }
+
+    public virtual DbSet<VParticipante> VParticipantes { get; set; }
+
+    public virtual DbSet<VParticipanteDocumento> VParticipanteDocumentos { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
 #warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see http://go.microsoft.com/fwlink/?LinkId=723263.
@@ -584,7 +588,7 @@ public partial class PortalEgresadosContext : DbContext
             entity.Property(e => e.Prioridad).HasDefaultValueSql("((0))");
         });
 
-        modelBuilder.Entity<Pais>(entity =>
+        modelBuilder.Entity<Pai>(entity =>
         {
             entity.HasKey(e => e.PaisId).HasName("PK_Pais_PaisId");
 
@@ -772,220 +776,260 @@ public partial class PortalEgresadosContext : DbContext
                 .IsUnicode(false);
         });
 
-        //modelBuilder.Entity<VDireccion>(entity =>
-        //{
-        //    entity
-        //        .HasNoKey()
-        //        .ToView("v_Direccion", "dbo");
+        modelBuilder.Entity<VContactoConTipo>(entity =>
+        {
+            entity
+                .HasNoKey()
+                .ToView("v_ContactoConTipo", "dbo");
 
-        //    entity.Property(e => e.Ciudad)
-        //        .HasMaxLength(60)
-        //        .IsUnicode(false);
-        //    entity.Property(e => e.CodigoPostal)
-        //        .HasMaxLength(10)
-        //        .IsUnicode(false);
-        //    entity.Property(e => e.Direccion)
-        //        .HasMaxLength(255)
-        //        .IsUnicode(false);
-        //    entity.Property(e => e.Localidad)
-        //        .HasMaxLength(255)
-        //        .IsUnicode(false);
-        //    entity.Property(e => e.Pais)
-        //        .HasMaxLength(80)
-        //        .IsUnicode(false);
-        //});
+            entity.Property(e => e.IdInContacto).HasColumnName("idInContacto");
+            entity.Property(e => e.NombreCompleto)
+                .HasMaxLength(81)
+                .IsUnicode(false);
+            entity.Property(e => e.NombreContacto)
+                .HasMaxLength(60)
+                .IsUnicode(false);
+            entity.Property(e => e.NombreTipoContacto)
+                .HasMaxLength(30)
+                .IsUnicode(false);
+        });
 
-        //modelBuilder.Entity<VEgresado>(entity =>
-        //{
-        //    entity
-        //        .HasNoKey()
-        //        .ToView("v_Egresado", "dbo");
+        modelBuilder.Entity<VDireccion>(entity =>
+        {
+            entity
+                .HasNoKey()
+                .ToView("v_Direccion", "dbo");
 
-        //    entity.Property(e => e.Acerca).IsUnicode(false);
-        //    entity.Property(e => e.Ciudad)
-        //        .HasMaxLength(60)
-        //        .IsUnicode(false);
-        //    entity.Property(e => e.CodigoPostal)
-        //        .HasMaxLength(10)
-        //        .IsUnicode(false);
-        //    entity.Property(e => e.DireccionPrincipal)
-        //        .HasMaxLength(255)
-        //        .IsUnicode(false);
-        //    entity.Property(e => e.FechaNac).HasColumnType("date");
-        //    entity.Property(e => e.FotoPerfilUrl)
-        //        .IsUnicode(false)
-        //        .HasColumnName("FotoPerfilURL");
-        //    entity.Property(e => e.Genero)
-        //        .HasMaxLength(1)
-        //        .IsUnicode(false)
-        //        .IsFixedLength();
-        //    entity.Property(e => e.GenticilioNac)
-        //        .HasMaxLength(60)
-        //        .IsUnicode(false);
-        //    entity.Property(e => e.Localidad)
-        //        .HasMaxLength(255)
-        //        .IsUnicode(false);
-        //    entity.Property(e => e.NombreCompleto)
-        //        .HasMaxLength(165)
-        //        .IsUnicode(false);
-        //    entity.Property(e => e.NombreUsuario)
-        //        .HasMaxLength(20)
-        //        .IsUnicode(false);
-        //    entity.Property(e => e.Pais)
-        //        .HasMaxLength(80)
-        //        .IsUnicode(false);
-        //    entity.Property(e => e.PrimerApellido)
-        //        .HasMaxLength(50)
-        //        .IsUnicode(false);
-        //    entity.Property(e => e.PrimerNombre)
-        //        .HasMaxLength(30)
-        //        .IsUnicode(false);
-        //    entity.Property(e => e.SegundoApellido)
-        //        .HasMaxLength(50)
-        //        .IsUnicode(false);
-        //    entity.Property(e => e.SegundoNombre)
-        //        .HasMaxLength(30)
-        //        .IsUnicode(false);
-        //    entity.Property(e => e.TipoParticipante)
-        //        .HasMaxLength(30)
-        //        .IsUnicode(false);
-        //});
+            entity.Property(e => e.Ciudad)
+                .HasMaxLength(60)
+                .IsUnicode(false);
+            entity.Property(e => e.CodigoPostal)
+                .HasMaxLength(10)
+                .IsUnicode(false);
+            entity.Property(e => e.Direccion)
+                .HasMaxLength(255)
+                .IsUnicode(false);
+            entity.Property(e => e.Localidad)
+                .HasMaxLength(255)
+                .IsUnicode(false);
+            entity.Property(e => e.Pais)
+                .HasMaxLength(80)
+                .IsUnicode(false);
+        });
 
-        //modelBuilder.Entity<VEgresadoIdioma>(entity =>
-        //{
-        //    entity
-        //        .HasNoKey()
-        //        .ToView("v_EgresadoIdioma", "dbo");
+        modelBuilder.Entity<VEducacionConDetalle>(entity =>
+        {
+            entity
+                .HasNoKey()
+                .ToView("v_EducacionConDetalle", "dbo");
 
-        //    entity.Property(e => e.Idioma)
-        //        .HasMaxLength(40)
-        //        .IsUnicode(false);
-        //    entity.Property(e => e.Iso)
-        //        .HasMaxLength(2)
-        //        .IsUnicode(false)
-        //        .IsFixedLength()
-        //        .HasColumnName("ISO");
-        //});
+            entity.Property(e => e.FechaEntrada).HasColumnType("date");
+            entity.Property(e => e.FechaGraduacion).HasColumnType("date");
+            entity.Property(e => e.FechaSalida).HasColumnType("date");
+            entity.Property(e => e.IdInEducacion).HasColumnName("idInEducacion");
+            entity.Property(e => e.IdInFormacion).HasColumnName("idInFormacion");
+            entity.Property(e => e.NombreFormacion)
+                .HasMaxLength(80)
+                .IsUnicode(false);
+            entity.Property(e => e.NombreNivel)
+                .HasMaxLength(30)
+                .IsUnicode(false);
+            entity.Property(e => e.Organizacion)
+                .HasMaxLength(120)
+                .IsUnicode(false);
+        });
 
-        //modelBuilder.Entity<VExperienciaLaboral>(entity =>
-        //{
-        //    entity
-        //        .HasNoKey()
-        //        .ToView("v_ExperienciaLaboral", "dbo");
+        modelBuilder.Entity<VEgresado>(entity =>
+        {
+            entity
+                .HasNoKey()
+                .ToView("v_Egresado", "dbo");
 
-        //    entity.Property(e => e.Acerca).IsUnicode(false);
-        //    entity.Property(e => e.FechaEntrada).HasColumnType("date");
-        //    entity.Property(e => e.FechaSalida).HasColumnType("date");
-        //    entity.Property(e => e.Organizacion)
-        //        .HasMaxLength(120)
-        //        .IsUnicode(false);
-        //    entity.Property(e => e.Posicion)
-        //        .HasMaxLength(60)
-        //        .IsUnicode(false);
-        //});
+            entity.Property(e => e.Acerca).IsUnicode(false);
+            entity.Property(e => e.Ciudad)
+                .HasMaxLength(60)
+                .IsUnicode(false);
+            entity.Property(e => e.CodigoPostal)
+                .HasMaxLength(10)
+                .IsUnicode(false);
+            entity.Property(e => e.DireccionPrincipal)
+                .HasMaxLength(255)
+                .IsUnicode(false);
+            entity.Property(e => e.FechaNac).HasColumnType("date");
+            entity.Property(e => e.FotoPerfilUrl)
+                .IsUnicode(false)
+                .HasColumnName("FotoPerfilURL");
+            entity.Property(e => e.Genero)
+                .HasMaxLength(1)
+                .IsUnicode(false)
+                .IsFixedLength();
+            entity.Property(e => e.GenticilioNac)
+                .HasMaxLength(60)
+                .IsUnicode(false);
+            entity.Property(e => e.Localidad)
+                .HasMaxLength(255)
+                .IsUnicode(false);
+            entity.Property(e => e.NombreCompleto)
+                .HasMaxLength(165)
+                .IsUnicode(false);
+            entity.Property(e => e.NombreUsuario)
+                .HasMaxLength(20)
+                .IsUnicode(false);
+            entity.Property(e => e.Pais)
+                .HasMaxLength(80)
+                .IsUnicode(false);
+            entity.Property(e => e.PrimerApellido)
+                .HasMaxLength(50)
+                .IsUnicode(false);
+            entity.Property(e => e.PrimerNombre)
+                .HasMaxLength(30)
+                .IsUnicode(false);
+            entity.Property(e => e.SegundoApellido)
+                .HasMaxLength(50)
+                .IsUnicode(false);
+            entity.Property(e => e.SegundoNombre)
+                .HasMaxLength(30)
+                .IsUnicode(false);
+            entity.Property(e => e.TipoParticipante)
+                .HasMaxLength(30)
+                .IsUnicode(false);
+        });
 
-        //modelBuilder.Entity<VLocalidadPostal>(entity =>
-        //{
-        //    entity
-        //        .HasNoKey()
-        //        .ToView("v_LocalidadPostal", "dbo");
+        modelBuilder.Entity<VEgresadoIdioma>(entity =>
+        {
+            entity
+                .HasNoKey()
+                .ToView("v_EgresadoIdioma", "dbo");
 
-        //    entity.Property(e => e.Ciudad)
-        //        .HasMaxLength(60)
-        //        .IsUnicode(false);
-        //    entity.Property(e => e.CodigoPostal)
-        //        .HasMaxLength(10)
-        //        .IsUnicode(false);
-        //    entity.Property(e => e.Localidad)
-        //        .HasMaxLength(255)
-        //        .IsUnicode(false);
-        //    entity.Property(e => e.Pais)
-        //        .HasMaxLength(80)
-        //        .IsUnicode(false);
-        //});
+            entity.Property(e => e.Idioma)
+                .HasMaxLength(40)
+                .IsUnicode(false);
+            entity.Property(e => e.Iso)
+                .HasMaxLength(2)
+                .IsUnicode(false)
+                .IsFixedLength()
+                .HasColumnName("ISO");
+        });
 
-        //modelBuilder.Entity<VNacionalidad>(entity =>
-        //{
-        //    entity
-        //        .HasNoKey()
-        //        .ToView("v_Nacionalidad", "dbo");
+        modelBuilder.Entity<VExperienciaLaboral>(entity =>
+        {
+            entity
+                .HasNoKey()
+                .ToView("v_ExperienciaLaboral", "dbo");
 
-        //    entity.Property(e => e.Id).ValueGeneratedOnAdd();
-        //    entity.Property(e => e.Iso)
-        //        .HasMaxLength(3)
-        //        .IsUnicode(false)
-        //        .IsFixedLength()
-        //        .HasColumnName("ISO");
-        //    entity.Property(e => e.Nacionalidad)
-        //        .HasMaxLength(60)
-        //        .IsUnicode(false);
-        //});
+            entity.Property(e => e.Acerca).IsUnicode(false);
+            entity.Property(e => e.FechaEntrada).HasColumnType("date");
+            entity.Property(e => e.FechaSalida).HasColumnType("date");
+            entity.Property(e => e.Organizacion)
+                .HasMaxLength(120)
+                .IsUnicode(false);
+            entity.Property(e => e.Posicion)
+                .HasMaxLength(60)
+                .IsUnicode(false);
+        });
 
-        //modelBuilder.Entity<VPais>(entity =>
-        //{
-        //    entity
-        //        .HasNoKey()
-        //        .ToView("v_Pais", "dbo");
+        modelBuilder.Entity<VLocalidadPostal>(entity =>
+        {
+            entity
+                .HasNoKey()
+                .ToView("v_LocalidadPostal", "dbo");
 
-        //    entity.Property(e => e.Id).ValueGeneratedOnAdd();
-        //    entity.Property(e => e.Iso)
-        //        .HasMaxLength(3)
-        //        .IsUnicode(false)
-        //        .IsFixedLength()
-        //        .HasColumnName("ISO");
-        //    entity.Property(e => e.Pais)
-        //        .HasMaxLength(80)
-        //        .IsUnicode(false);
-        //});
+            entity.Property(e => e.Ciudad)
+                .HasMaxLength(60)
+                .IsUnicode(false);
+            entity.Property(e => e.CodigoPostal)
+                .HasMaxLength(10)
+                .IsUnicode(false);
+            entity.Property(e => e.Localidad)
+                .HasMaxLength(255)
+                .IsUnicode(false);
+            entity.Property(e => e.Pais)
+                .HasMaxLength(80)
+                .IsUnicode(false);
+        });
 
-        //modelBuilder.Entity<VParticipante>(entity =>
-        //{
-        //    entity
-        //        .HasNoKey()
-        //        .ToView("v_Participante", "dbo");
+        modelBuilder.Entity<VNacionalidad>(entity =>
+        {
+            entity
+                .HasNoKey()
+                .ToView("v_Nacionalidad", "dbo");
 
-        //    entity.Property(e => e.Ciudad)
-        //        .HasMaxLength(60)
-        //        .IsUnicode(false);
-        //    entity.Property(e => e.CodigoPostal)
-        //        .HasMaxLength(10)
-        //        .IsUnicode(false);
-        //    entity.Property(e => e.DireccionPrincipal)
-        //        .HasMaxLength(255)
-        //        .IsUnicode(false);
-        //    entity.Property(e => e.EsEgresado)
-        //        .HasMaxLength(2)
-        //        .IsUnicode(false);
-        //    entity.Property(e => e.FotoPerfilUrl)
-        //        .IsUnicode(false)
-        //        .HasColumnName("FotoPerfilURL");
-        //    entity.Property(e => e.Localidad)
-        //        .HasMaxLength(255)
-        //        .IsUnicode(false);
-        //    entity.Property(e => e.NombreUsuario)
-        //        .HasMaxLength(20)
-        //        .IsUnicode(false);
-        //    entity.Property(e => e.Pais)
-        //        .HasMaxLength(80)
-        //        .IsUnicode(false);
-        //    entity.Property(e => e.TipoParticipante)
-        //        .HasMaxLength(30)
-        //        .IsUnicode(false);
-        //});
+            entity.Property(e => e.Id).ValueGeneratedOnAdd();
+            entity.Property(e => e.Iso)
+                .HasMaxLength(3)
+                .IsUnicode(false)
+                .IsFixedLength()
+                .HasColumnName("ISO");
+            entity.Property(e => e.Nacionalidad)
+                .HasMaxLength(60)
+                .IsUnicode(false);
+        });
 
-        //modelBuilder.Entity<VParticipanteDocumento>(entity =>
-        //{
-        //    entity
-        //        .HasNoKey()
-        //        .ToView("v_ParticipanteDocumento", "dbo");
+        modelBuilder.Entity<VPai>(entity =>
+        {
+            entity
+                .HasNoKey()
+                .ToView("v_Pais", "dbo");
 
-        //    entity.Property(e => e.DocumentoNo)
-        //        .HasMaxLength(30)
-        //        .IsUnicode(false);
-        //    entity.Property(e => e.TipoDocumento)
-        //        .HasMaxLength(30)
-        //        .IsUnicode(false);
-        //});
+            entity.Property(e => e.Id).ValueGeneratedOnAdd();
+            entity.Property(e => e.Iso)
+                .HasMaxLength(3)
+                .IsUnicode(false)
+                .IsFixedLength()
+                .HasColumnName("ISO");
+            entity.Property(e => e.Pais)
+                .HasMaxLength(80)
+                .IsUnicode(false);
+        });
+
+        modelBuilder.Entity<VParticipante>(entity =>
+        {
+            entity
+                .HasNoKey()
+                .ToView("v_Participante", "dbo");
+
+            entity.Property(e => e.Ciudad)
+                .HasMaxLength(60)
+                .IsUnicode(false);
+            entity.Property(e => e.CodigoPostal)
+                .HasMaxLength(10)
+                .IsUnicode(false);
+            entity.Property(e => e.DireccionPrincipal)
+                .HasMaxLength(255)
+                .IsUnicode(false);
+            entity.Property(e => e.EsEgresado)
+                .HasMaxLength(2)
+                .IsUnicode(false);
+            entity.Property(e => e.FotoPerfilUrl)
+                .IsUnicode(false)
+                .HasColumnName("FotoPerfilURL");
+            entity.Property(e => e.Localidad)
+                .HasMaxLength(255)
+                .IsUnicode(false);
+            entity.Property(e => e.NombreUsuario)
+                .HasMaxLength(20)
+                .IsUnicode(false);
+            entity.Property(e => e.Pais)
+                .HasMaxLength(80)
+                .IsUnicode(false);
+            entity.Property(e => e.TipoParticipante)
+                .HasMaxLength(30)
+                .IsUnicode(false);
+        });
+
+        modelBuilder.Entity<VParticipanteDocumento>(entity =>
+        {
+            entity
+                .HasNoKey()
+                .ToView("v_ParticipanteDocumento", "dbo");
+
+            entity.Property(e => e.DocumentoNo)
+                .HasMaxLength(30)
+                .IsUnicode(false);
+            entity.Property(e => e.TipoDocumento)
+                .HasMaxLength(30)
+                .IsUnicode(false);
+        });
 
         OnModelCreatingPartial(modelBuilder);
     }

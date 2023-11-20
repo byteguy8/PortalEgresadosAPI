@@ -19,5 +19,5 @@ public partial class Ciudad
 
     public virtual ICollection<LocalidadPostal> LocalidadPostals { get; set; } = new List<LocalidadPostal>();
 
-    public virtual Pais Pais { get; set; } = null!;
+    public virtual Pai Pais { get; set; } = null!;
 }

@@ -47,7 +47,7 @@ public partial class Egresado
 
     public virtual ICollection<ExperienciaLaboral> ExperienciaLaborals { get; set; } = new List<ExperienciaLaboral>();
 
-    public virtual Pais NacionalidadNavigation { get; set; } = null!;
+    public virtual Pai NacionalidadNavigation { get; set; } = null!;
 
     public virtual Participante Participante { get; set; } = null!;
 }

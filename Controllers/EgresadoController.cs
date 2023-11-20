@@ -9,7 +9,8 @@ using PortalEgresadosAPI;
 [ApiController]
 [Route("[controller]")]
 
-public class EgresadoController : Controller{
+public class EgresadoController : Controller
+{
     private enum TipoIdentidad
     {
         CEDULA,
@@ -588,12 +589,12 @@ public class EgresadoController : Controller{
 
             var cloudinary = new Cloudinary(account);
 
-            var uuid = Guid.NewGuid();
-            var nombreFoto = $"foto_perfil_egresado_{uuid}{rawEgresado.EgresadoId}";
+            var nombreFotoBytes = Utils.HASH256($"{rawEgresado.EgresadoId}");
+            var nombreFoto = Convert.ToHexString(nombreFotoBytes);
 
             var uploadParameters = new ImageUploadParams()
             {
-                File = new FileDescription("foto", inputStream),
+                File = new FileDescription("Foto perfil egresado", inputStream),
                 PublicId = nombreFoto
             };
 

@@ -1,4 +1,26 @@
+using System.Text;
+using Microsoft.IdentityModel.Tokens;
+
 var builder = WebApplication.CreateBuilder(args);
+
+// Added by me
+
+builder.Services.AddAuthorization();
+builder.Services.AddAuthentication("Bearer").AddJwtBearer(opt =>
+{
+    var signingKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Utils.key));
+    var signingCredentials = new SigningCredentials(signingKey, SecurityAlgorithms.HmacSha256Signature);
+
+    opt.RequireHttpsMetadata = false;
+
+    opt.TokenValidationParameters = new TokenValidationParameters()
+    {
+        ValidateAudience = false,
+        ValidateIssuer = false,
+        IssuerSigningKey = signingKey
+    };
+});
+// Added by me
 
 // Add services to the container.
 

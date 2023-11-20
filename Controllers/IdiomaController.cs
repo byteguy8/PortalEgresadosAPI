@@ -6,7 +6,8 @@ namespace PortalEgresadosAPI.Controllers;
 
 [ApiController]
 [Route("[controller]")]
-public class IdiomaController : ControllerBase{
+public class IdiomaController : ControllerBase
+{
 
     [HttpGet]
     public IResult ObtenerIdiomas()
@@ -143,12 +144,10 @@ public class IdiomaController : ControllerBase{
                 Idiomas.Add(i);
             }
 
-            return Idiomas;
-
-           /* return Results.Json(
-                data: Idiomas,
-                statusCode: StatusCodes.Status200OK
-            );*/
+            return Results.Json(
+                 data: Idiomas,
+                 statusCode: StatusCodes.Status200OK
+             );
 
         }
         catch (Exception ex)

@@ -1,7 +1,10 @@
 using System.Security.Cryptography;
+using System.Text;
 
 public class Utils
 {
+    public static string key = "zFx5iAfzYwzVs6mdamU9GQ3amdx+iftwkLD70Abq8kEfI77TEUzXgLClzMnFOZml09nnpKpeYkdYRzKNkK+nLg==";
+    
     public static IResult HandleError(Exception ex)
     {
         Console.Error.WriteLine(ex.Message);
@@ -47,5 +50,11 @@ public class Utils
         );
 
         return pbkdf2.GetBytes(32);
+    }
+
+    public static byte[] HASH256(string input)
+    {
+        byte[] inputBytes = Encoding.UTF8.GetBytes(input);
+        return SHA256.HashData(inputBytes);
     }
 }
