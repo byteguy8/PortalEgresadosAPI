@@ -7,6 +7,70 @@ namespace PortalEgresadosAPI.Controllers;
 [Route("[controller]")]
 public class CandidatoController : ControllerBase
 {
+    [HttpGet("{EgresadoId}")]
+    public IResult EsCandidato([FromQuery] int egresadoId)
+    {
+        PortalEgresadosContext? context = null;
+
+        try
+        {
+            context = new PortalEgresadosContext();
+
+            var esCandidatoDoctorado = context
+                .Egresados
+                .Include(e => e.Participante)
+                .Include(e => e.NacionalidadNavigation)
+                .Where(e =>
+                    e.EgresadoId == egresadoId &&
+                    e.Educacions.Where(ed => ed.Formacion.Nivel.Nombre == "Doctorado").Any() &&
+                    e.EgresadoHabilidads.Count() >= 3 &&
+                    e.EgresadoIdiomas.Count() >= 1
+                )
+                .Any();
+
+            var esCandidatoMaestria = context
+                .Egresados
+                .Include(e => e.Participante)
+                .Include(e => e.NacionalidadNavigation)
+                .Where(e =>
+                    e.EgresadoId == egresadoId &&
+                    e.Educacions.Where(ed => ed.Formacion.Nivel.Nombre == "Maestria").Any() &&
+                    e.EgresadoHabilidads.Count() >= 6 &&
+                    e.EgresadoIdiomas.Count() >= 2 &&
+                    e.ExperienciaLaborals.Count() >= 3
+                )
+                .Any();
+
+            var esCandidatoGrado = context
+                .Egresados
+                .Include(e => e.Participante)
+                .Include(e => e.NacionalidadNavigation)
+                .Where(e =>
+                    e.EgresadoId == egresadoId &&
+                    e.Educacions.Where(ed => ed.Formacion.Nivel.Nombre == "Grado").Any() &&
+                    e.Educacions.Where(ed => ed.Formacion.Nivel.Nombre == "Tecnico Profesional").Any() &&
+                    e.EgresadoHabilidads.Count() >= 10 &&
+                    e.EgresadoIdiomas.Count() >= 2 &&
+                    e.ExperienciaLaborals.Count() >= 5
+                )
+                .Any();
+
+            return Results.Ok(
+                esCandidatoDoctorado &&
+                esCandidatoMaestria &&
+                esCandidatoGrado
+            );
+        }
+        catch (Exception ex)
+        {
+            return Utils.HandleError(ex);
+        }
+        finally
+        {
+            context?.Dispose();
+        }
+    }
+
     [HttpGet]
     public IResult ObtenerCandidatos()
     {
@@ -39,7 +103,7 @@ public class CandidatoController : ControllerBase
                 )
                 .ToList();
 
-            var rawCandidatos = context
+            var rawCandidatosGrado = context
                 .Egresados
                 .Include(e => e.Participante)
                 .Include(e => e.NacionalidadNavigation)
@@ -64,7 +128,7 @@ public class CandidatoController : ControllerBase
                 egresados.Add(Utils.ObtenerInfEgresado(context, rawEgresado));
             }
 
-            foreach (var rawEgresado in rawCandidatos)
+            foreach (var rawEgresado in rawCandidatosGrado)
             {
                 egresados.Add(Utils.ObtenerInfEgresado(context, rawEgresado));
             }
