@@ -7,9 +7,10 @@ namespace PortalEgresadosAPI.Controllers;
 [Route("[controller]")]
 public class ExperienciaLaboralController : ControllerBase
 {
-
+    /*En los get estas devolviendo todos los datos de la entidad como tal no solo los que te pide 
+    el frondent muchos son innecesarios para ellos*/
     [HttpGet("{egresadoId}")]
-    public IResult ExperienciaLaboralEgresado(int egresadoId)
+    public async Task<IResult> ExperienciaLaboralEgresado(int egresadoId)
     {
 
         PortalEgresadosContext? context;
@@ -18,30 +19,13 @@ public class ExperienciaLaboralController : ControllerBase
         {
             context = new PortalEgresadosContext();
 
-            var ExperienciaLaborales = context
-                .ExperienciaLaborals
-                .Where(e => e.EgresadoId == egresadoId)
-                .ToList();
-
-            var Experiencias = new List<dynamic>();
-
-            foreach (var experienciaLaboral in ExperienciaLaborales)
-            {
-                dynamic e = new
-                {
-                    id = experienciaLaboral.ExperienciaLaboralId,
-                    organizacion = experienciaLaboral.Organizacion,
-                    posicion = experienciaLaboral.Posicion,
-                    fechaentrada = experienciaLaboral.FechaEntrada,
-                    fechaSalida = experienciaLaboral.FechaSalida
-
-                };
-
-                Experiencias.Add(e);
-            }
+            var ExperienciaLaborales = await context
+                    .ExperienciaLaborals
+                    .Where(e => e.EgresadoId == egresadoId)
+                    .ToListAsync();
 
             return Results.Json(
-                data: Experiencias,
+                data: ExperienciaLaborales,
                 statusCode: StatusCodes.Status200OK
             );
 
@@ -60,4 +44,69 @@ public class ExperienciaLaboralController : ControllerBase
 
     }
 
+    [HttpPost]
+    public async Task<IResult> CreateExperienciaLaboralEgresado([FromBody] ExperienciaLaboralPOSTDTO experienciaLaboral)
+    {
+        try
+        {
+            PortalEgresadosContext context = new PortalEgresadosContext();
+
+            ExperienciaLaboral experienciaLaboralToInsert = experienciaLaboral.Convert();
+
+            await context.ExperienciaLaborals.AddAsync(experienciaLaboralToInsert);
+
+            await context.SaveChangesAsync();
+
+            return Results.Json(
+                  data: experienciaLaboralToInsert.ExperienciaLaboralId,
+                  statusCode: StatusCodes.Status200OK
+              );
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine(ex.Message);
+
+            return Results.Json(
+                data: new ErrorResult(0, "Unexpected server error"),
+                statusCode: StatusCodes.Status500InternalServerError
+            );
+
+        }
+
+
+    }
+
+    [HttpDelete]
+
+    public async Task<IResult> DeleteExperienciaLaboralEgresado([FromQuery] int id)
+    {
+
+        try
+        {
+            PortalEgresadosContext context = new PortalEgresadosContext();
+
+            ExperienciaLaboral experiencia =
+                await context.ExperienciaLaborals
+                .FirstOrDefaultAsync(experienciaLaboral => experienciaLaboral.ExperienciaLaboralId == id) ?? new();
+
+            context.ExperienciaLaborals.Remove(experiencia);
+
+            await context.SaveChangesAsync();
+
+            return Results.Json(
+                  data: true,
+                  statusCode: StatusCodes.Status200OK
+              );
+        }
+        catch (Exception ex)
+        {
+
+            Console.Error.WriteLine(ex.Message);
+
+            return Results.Json(
+                data: new ErrorResult(0, "Unexpected server error"),
+                statusCode: StatusCodes.Status500InternalServerError
+            );
+        }
+    }
 }

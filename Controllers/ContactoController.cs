@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using PortalEgresadosAPI.Database.DTO;
 
 namespace PortalEgresadosAPI.Controllers;
 
@@ -7,9 +8,9 @@ namespace PortalEgresadosAPI.Controllers;
 [Route("[controller]")]
 public class ContactoController : ControllerBase
 {
-
     [HttpGet("{egresadoId}")]
-    public IResult ContactoEgresado(int egresadoId)
+    /*Nombre del Metodo erroneo*/
+    public IResult DeleteContactoEgresado(int egresadoId)
     {
 
         PortalEgresadosContext? context;
@@ -19,31 +20,12 @@ public class ContactoController : ControllerBase
             context = new PortalEgresadosContext();
 
             var EgresadoContacto = context
-                .Contactos
-                .Where(ed => ed.ParticipanteId == egresadoId)
-                .Include(ed => ed.TipoContacto)
-                .ToList();
-
-            var contacto = new List<dynamic>();
-
-            foreach (var contactos in EgresadoContacto)
-            {
-                dynamic c = new
-                {
-                    contactoId = contactos.ContactoId,
-                    participanteId = contactos.ParticipanteId,
-                    tipoContactoId = contactos.TipoContactoId,
-                    nombre = contactos.Nombre,
-                    tipoContacto = contactos.TipoContacto.Nombre
-
-                };
-
-                contacto.Add(c);
-
-            }
+                    .Contactos
+                    .Where(ed => ed.ParticipanteId == egresadoId)
+                    .ToList();
 
             return Results.Json(
-            data: contacto,
+            data: EgresadoContacto,
             statusCode: StatusCodes.Status200OK
         );
 
@@ -60,4 +42,58 @@ public class ContactoController : ControllerBase
         }
     }
 
+
+    [HttpPost]
+    public async Task<IResult> CreateContactoEgresado([FromBody] ContactoPOSTDTO contacto)
+    {
+        try
+        {
+            var context = new PortalEgresadosContext();
+
+            var toCreateContact = contacto.ToContacto();
+
+            var createdContact = await context.Contactos.AddAsync(toCreateContact);
+
+            await context.SaveChangesAsync();
+
+            return Results.Json(toCreateContact.ContactoId, statusCode: StatusCodes.Status200OK);
+
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine(ex.Message);
+
+            return Results.Json(
+                data: new ErrorResult(0, "Unexpected server error"),
+                statusCode: StatusCodes.Status500InternalServerError
+            );
+        }
+
+    }
+
+    [HttpDelete("{contactoId}")]
+    public async Task<IResult> ContactoEgresado(int contactoId)
+    {
+        try
+        {
+            var context = new PortalEgresadosContext();
+
+            var contactToDelete = await context.Contactos.FirstOrDefaultAsync(x => x.ContactoId == contactoId) ?? new Contacto();
+
+            context.Contactos.Remove(contactToDelete);
+
+            await context.SaveChangesAsync();
+
+            return Results.Json(true, statusCode: StatusCodes.Status200OK);
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine(ex.Message);
+
+            return Results.Json(
+                data: new ErrorResult(0, "Unexpected server error"),
+                statusCode: StatusCodes.Status500InternalServerError
+            );
+        }
+    }
 }

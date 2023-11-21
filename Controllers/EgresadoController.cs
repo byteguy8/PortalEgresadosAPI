@@ -1,5 +1,7 @@
+using System.Text;
 using CloudinaryDotNet;
 using CloudinaryDotNet.Actions;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
@@ -269,7 +271,7 @@ public class EgresadoController : Controller
             );
         }
 
-        byte[] byteSalt = Utils.GenerateSalt(32);
+        byte[] byteSalt = Utils.GenerateSalt();
         byte[] byteHashPassword = Utils.HashPasswordWithSalt(password, byteSalt);
 
         // Creando el usuario
@@ -367,6 +369,7 @@ public class EgresadoController : Controller
 
     }
 
+    [Authorize]
     [HttpPost]
     public IResult Agregar(EgresadoPOSTDTO egresado)
     {
@@ -377,6 +380,15 @@ public class EgresadoController : Controller
         {
             context = new PortalEgresadosContext();
             transaction = context.Database.BeginTransaction();
+
+            if (!Utils.isTokenAdministrator(User))
+            {
+                throw Utils.APIError(
+                    0,
+                    "Sin autorizacion para realizar la accion",
+                    StatusCodes.Status400BadRequest
+                );
+            }
 
             // Validando la informacion del genero
             if (egresado.Genero != "M" && egresado.Genero != "F")
@@ -405,6 +417,21 @@ public class EgresadoController : Controller
                 throw Utils.APIError(
                     0,
                     "Ambas matriculas deben tener una longitud mayor que 0 e igual o menor que 11",
+                    StatusCodes.Status400BadRequest
+                );
+            }
+
+            // Verificando si existe el email
+            var existeEmail = context
+                .Contactos
+                .Where(c => c.Nombre == egresado.Email)
+                .Count() == 1;
+
+            if (existeEmail)
+            {
+                throw Utils.APIError(
+                    0,
+                    $"El email '${egresado.Email}' no se encuentra disponible",
                     StatusCodes.Status400BadRequest
                 );
             }
@@ -546,6 +573,7 @@ public class EgresadoController : Controller
         }
     }
 
+    [Authorize]
     [HttpPut("FotoPerfil/{egresadoId}")]
     public async Task<IResult> SubirFotoPerfil(int egresadoId, [FromForm] IFormFile foto)
     {
@@ -554,6 +582,15 @@ public class EgresadoController : Controller
         try
         {
             context = new PortalEgresadosContext();
+
+            if (!Utils.IsTokenAuthorizedEmail(context, egresadoId, User))
+            {
+                throw Utils.APIError(
+                    0,
+                    "Sin autorizacion para realizar la accion",
+                    StatusCodes.Status400BadRequest
+                );
+            }
 
             var rawEgresado = await context
                 .Egresados
@@ -624,6 +661,7 @@ public class EgresadoController : Controller
         }
     }
 
+    [Authorize]
     [HttpPut]
     public IResult ModificarEgresado(EgresadoPUTDTO egresado)
     {
@@ -634,6 +672,15 @@ public class EgresadoController : Controller
         {
             context = new PortalEgresadosContext();
             transaction = context.Database.BeginTransaction();
+
+            if (!Utils.IsTokenAuthorizedEmail(context, egresado.Id, User))
+            {
+                throw Utils.APIError(
+                    0,
+                    "Sin autorizacion para realizar la accion",
+                    StatusCodes.Status400BadRequest
+                );
+            }
 
             if (egresado.Genero != "M" && egresado.Genero != "F")
             {
@@ -753,33 +800,27 @@ public class EgresadoController : Controller
         }
     }
 
-    [HttpGet("{valor}/{limit}/{offset}")]
-    public IResult Busqueda(String valor, int limit, int offset)
+    [HttpGet("Busqueda")]
+    public IResult Busqueda([FromQuery] string? valor, int limit, int offset)
     {
-
         PortalEgresadosContext? context = null;
-        IDbContextTransaction? transaction = null;
 
         try
         {
             context = new PortalEgresadosContext();
-            transaction = context.Database.BeginTransaction();
 
-            var busqueda = context
-                .Egresados
-                .Where(b => EF.Functions.Like(b.PrimerNombre, $"%{valor}%") || EF.Functions.Like(b.PrimerApellido, $"%{valor}%"))
-                .Include(e => e.Participante)
-                .Include(e => e.NacionalidadNavigation)
-                .OrderBy(b => b.PrimerNombre)
-                .Skip(offset * limit)
-                .Take(limit)
-                .ToList();
+            var busqueda = context.Egresados
+               .Where(b => EF.Functions.Like(b.PrimerNombre, $"%{valor ?? ""}%") || EF.Functions.Like(b.PrimerApellido, $"%{valor ?? ""}%"))
+               .Include(e => e.Participante)
+               .Include(e => e.NacionalidadNavigation)
+               .OrderBy(b => b.PrimerNombre)
+               .Skip(offset * limit)
+               .Take(limit)
+               .ToList();
 
             // Verificando si existe algun usuario con ese valor. Si no existe, la operacion debe ser abortada
             if (!busqueda.Any())
             {
-                transaction.Rollback();
-
                 return Results.Json(data: busqueda, statusCode: StatusCodes.Status400BadRequest);
             }
 
@@ -921,37 +962,12 @@ public class EgresadoController : Controller
                     Habilidades.Add(h);
                 }
 
-                var EgresadoDestacado = context
+                var esDestacado = context
                     .EgresadoDestacados
-                    .Where(ed => ed.EgresadoId == item.EgresadoId)
-                    .ToList();
-
-                var destacado = new List<dynamic>();
-                var egresadoDestacado = false;
-
-                if (EgresadoDestacado.Any())
-                {
-                    foreach (var edestacado in EgresadoDestacado)
-                    {
-                        var egresadoHasta = edestacado.FechaHasta;
-
-                        if (egresadoHasta > DateTime.Now)
-                        {
-                            egresadoDestacado = true;
-                        }
-
-                        dynamic ed = new
-                        {
-                            Observacion = edestacado.Observacion,
-                            FechaDesde = edestacado.FechaDesde,
-                            FechaHasta = edestacado.FechaHasta,
-                            egresadoDestacado
-                        };
-
-                        destacado.Add(ed);
-
-                    }
-                }
+                    .Where(d =>
+                        d.EgresadoId == item.EgresadoId &&
+                        d.FechaHasta >= DateTime.Now
+                    ).Count() >= 1;
 
                 var ciudadDelEgresado = context
                     .Egresados
@@ -963,13 +979,10 @@ public class EgresadoController : Controller
 
                 if (ciudadDelEgresado != null)
                 {
-
                     ciudad = ciudadDelEgresado.Nombre;
-
                 }
                 else
                 {
-
                     ciudad = "Ciudad No Registrada";
                 }
 
@@ -999,7 +1012,7 @@ public class EgresadoController : Controller
                     FotoPerfilUrl = FotoPerfilUrl,
                     Acerca = about,
                     Estado = activo,
-                    Destacado = destacado,
+                    Destacado = esDestacado,
                     Nacionalidad = Nacionalidad,
                     EgresadoIdiomas = Idiomas,
                     ExperienciaLaborals = Experiencias,
@@ -1027,8 +1040,6 @@ public class EgresadoController : Controller
                 statusCode: StatusCodes.Status500InternalServerError
             );
         }
-
-
     }
 
     [HttpGet("{IdEgresado}")]
