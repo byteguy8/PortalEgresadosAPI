@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -7,8 +8,8 @@ namespace PortalEgresadosAPI.Controllers;
 [Route("[controller]")]
 public class ExperienciaLaboralController : ControllerBase
 {
-/*En los get estas devolviendo todos los datos de la entidad como tal no solo los que te pide 
-el frondent muchos son innecesarios para ellos*/
+    /*En los get estas devolviendo todos los datos de la entidad como tal no solo los que te pide 
+    el frondent muchos son innecesarios para ellos*/
     [HttpGet("{egresadoId}")]
     public async Task<IResult> ExperienciaLaboralEgresado(int egresadoId)
     {
@@ -44,8 +45,9 @@ el frondent muchos son innecesarios para ellos*/
 
     }
 
-    [HttpPost]  
-    public async Task<IResult> CreateExperienciaLaboralEgresado([FromBody]ExperienciaLaboralPOSTDTO experienciaLaboral)
+    [Authorize]
+    [HttpPost]
+    public async Task<IResult> CreateExperienciaLaboralEgresado([FromBody] ExperienciaLaboralPOSTDTO experienciaLaboral)
     {
         try
         {
@@ -76,16 +78,16 @@ el frondent muchos son innecesarios para ellos*/
 
     }
 
+    [Authorize]
     [HttpDelete]
-
-    public async Task<IResult> DeleteExperienciaLaboralEgresado([FromQuery]int id)
+    public async Task<IResult> DeleteExperienciaLaboralEgresado([FromQuery] int id)
     {
 
         try
         {
             PortalEgresadosContext context = new PortalEgresadosContext();
 
-            ExperienciaLaboral experiencia = 
+            ExperienciaLaboral experiencia =
                 await context.ExperienciaLaborals
                 .FirstOrDefaultAsync(experienciaLaboral => experienciaLaboral.ExperienciaLaboralId == id) ?? new();
 

@@ -1,7 +1,7 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using PortalEgresadosAPI.Database.DTO;
-using System.Diagnostics.Contracts;
 
 namespace PortalEgresadosAPI.Controllers;
 
@@ -9,7 +9,6 @@ namespace PortalEgresadosAPI.Controllers;
 [Route("[controller]")]
 public class ContactoController : ControllerBase
 {
-
     [HttpGet("{egresadoId}")]
     /*Nombre del Metodo erroneo*/
     public IResult DeleteContactoEgresado(int egresadoId)
@@ -44,7 +43,7 @@ public class ContactoController : ControllerBase
         }
     }
 
-
+    [Authorize]
     [HttpPost]
     public async Task<IResult> CreateContactoEgresado([FromBody] ContactoPOSTDTO contacto)
     {
@@ -72,7 +71,8 @@ public class ContactoController : ControllerBase
         }
        
     }
-
+    
+    [Authorize]
     [HttpDelete("{contactoId}")]
     public async Task<IResult> ContactoEgresado(int contactoId)
     {

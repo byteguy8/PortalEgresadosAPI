@@ -9,7 +9,6 @@ public class EgresadoPUTDTO
     public required DateTime FechaNac { get; set; }
     public string? Cedula { get; set; }
     public string? Pasaporte { get; set; }
-    public required string ProfilePicUrl { get; set; }
     public string? Acerca { get; set; }
     public required string Provincia { get; set; }
 }
