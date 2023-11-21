@@ -753,8 +753,8 @@ public class EgresadoController : Controller
         }
     }
 
-    [HttpGet("{valor}/{limit}/{offset}")]
-    public IResult Busqueda(String valor, int limit, int offset)
+    [HttpGet("{limit}/{offset}")]
+    public IResult Busqueda([FromQuery] String? valor, int limit, int offset)
     {
 
         PortalEgresadosContext? context = null;
@@ -765,9 +765,8 @@ public class EgresadoController : Controller
             context = new PortalEgresadosContext();
             transaction = context.Database.BeginTransaction();
 
-            var busqueda = context
-                .Egresados
-                .Where(b => EF.Functions.Like(b.PrimerNombre, $"%{valor}%") || EF.Functions.Like(b.PrimerApellido, $"%{valor}%"))
+             var busqueda = context.Egresados
+                .Where(b => EF.Functions.Like(b.PrimerNombre, $"%{valor ?? ""}%") || EF.Functions.Like(b.PrimerApellido, $"%{valor ?? ""}%"))
                 .Include(e => e.Participante)
                 .Include(e => e.NacionalidadNavigation)
                 .OrderBy(b => b.PrimerNombre)
@@ -1185,7 +1184,7 @@ public class EgresadoController : Controller
                     {
                         var egresadoHasta = edestacado.FechaHasta;
 
-                        if (egresadoHasta > DateTime.Now)
+                        if (egresadoHasta >= DateTime.Now)
                         {
                             egresadoDestacado = true;
                         }
