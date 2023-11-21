@@ -1,16 +1,14 @@
-using System.Text;
 using CloudinaryDotNet;
 using CloudinaryDotNet.Actions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
-using PortalEgresadosAPI;
 
+namespace PortalEgresadosAPI.Controllers;
 
 [ApiController]
 [Route("[controller]")]
-
 public class EgresadoController : Controller
 {
     private enum TipoIdentidad
@@ -296,210 +294,6 @@ public class EgresadoController : Controller
     }
 
     [Authorize]
-    [HttpPost]
-    public IResult Agregar(EgresadoPOSTDTO egresado)
-    {
-        PortalEgresadosContext? context = null;
-        IDbContextTransaction? transaction = null;
-
-        try
-        {
-            context = new PortalEgresadosContext();
-            transaction = context.Database.BeginTransaction();
-
-            if (!Utils.isTokenAdministrator(User))
-            {
-                throw Utils.APIError(
-                    0,
-                    "Sin autorizacion para realizar la accion",
-                    StatusCodes.Status400BadRequest
-                );
-            }
-
-            // Validando la informacion del genero
-            if (egresado.Genero != "M" && egresado.Genero != "F")
-            {
-                throw Utils.APIError(
-                    0,
-                    $"Valor para genero incorrecto. Debe ser M (masculino) o F (femenino).",
-                    StatusCodes.Status400BadRequest
-                );
-            }
-
-            // Validando la informacion del pasaporte. Se debe suministrar uno o ambos, pero no ninguno
-            if (egresado.Pasaporte == null && egresado.Cedula == null)
-            {
-                throw Utils.APIError(
-                    0,
-                    "Se espera informacion de la cedula y/o pasaporte, pero ninguno de los dos esta",
-                    StatusCodes.Status400BadRequest
-                );
-            }
-
-            // Validando longitud de matriculas
-            if (egresado.MatriculaEgresado.Length == 0 || egresado.MatriculaGrado.Length == 0 ||
-            egresado.MatriculaEgresado.Length > 11 || egresado.MatriculaGrado.Length > 11)
-            {
-                throw Utils.APIError(
-                    0,
-                    "Ambas matriculas deben tener una longitud mayor que 0 e igual o menor que 11",
-                    StatusCodes.Status400BadRequest
-                );
-            }
-
-            // Verificando si existe el email
-            var existeEmail = context
-                .Contactos
-                .Where(c => c.Nombre == egresado.Email)
-                .Count() == 1;
-
-            if (existeEmail)
-            {
-                throw Utils.APIError(
-                    0,
-                    $"El email '${egresado.Email}' no se encuentra disponible",
-                    StatusCodes.Status400BadRequest
-                );
-            }
-
-            // Verificando si existe la nacionalidad.
-            var rawNacionalidad = context
-                .Pais
-                .FirstOrDefault(n =>
-                    n.Nombre == egresado.Nacionalidad
-                )
-                ?? throw Utils.APIError(
-                    0,
-                    $"No existe la nacionalidad con el nombre '{egresado.Nacionalidad}'",
-                    StatusCodes.Status400BadRequest
-                );
-
-            // Verificando si existe el tipo de participante.
-            var rawTipoParticipante = context
-                .TipoParticipantes
-                .FirstOrDefault(t =>
-                    t.Nombre == egresado.TipoParticipante
-                )
-                ?? throw Utils.APIError(
-                    0,
-                    $"No existe el tipo de participante '{egresado.TipoParticipante}'",
-                    StatusCodes.Status400BadRequest
-                );
-
-            // Verificando si existe alguna o ambas matriculas
-            var existenMatriculas = context
-                .Egresados
-                .Where(e =>
-                    e.MatriculaEgresado == egresado.MatriculaEgresado ||
-                    e.MatriculaEgresado == egresado.MatriculaGrado ||
-                    e.MatriculaGrado == egresado.MatriculaEgresado ||
-                    e.MatriculaGrado == egresado.MatriculaGrado
-                )
-                .Any();
-
-            if (existenMatriculas)
-            {
-                throw Utils.APIError(
-                    0,
-                    $"Ya existe un egresado registrado con alguna de las matriculas suministradas",
-                    StatusCodes.Status400BadRequest
-                );
-            }
-
-            // Creado usuario
-            var rawUsuario = CrearUsuario(
-                context,
-                egresado.Rol,
-                egresado.UserName,
-                egresado.Password
-            );
-
-            var rawDireccion = CrearProvincia(context, egresado.Provincia);
-
-            // Creando Participante
-            var resultCrearParticipante = context
-                .Participantes
-                .Add(new Participante
-                {
-                    TipoParticipanteId = rawTipoParticipante.TipoParticipanteId,
-                    UsuarioId = rawUsuario.UsuarioId,
-                    EsEgresado = true,
-                    DireccionId = rawDireccion.DireccionId
-                })
-                ?? throw Utils.APIError(
-                    0,
-                    "Hubo un error al procesar la solicitud. Intentelo de nuevo",
-                    StatusCodes.Status500InternalServerError
-                );
-
-            context.SaveChanges();
-
-            var rawParticipante = resultCrearParticipante.Entity;
-
-            // Creando documentos
-            if (egresado.Cedula != null)
-            {
-                CrearDocumento(
-                    context,
-                    rawParticipante.ParticipanteId,
-                    TipoIdentidad.CEDULA,
-                    egresado.Cedula
-                );
-            }
-
-            if (egresado.Pasaporte != null)
-            {
-                CrearDocumento(
-                    context,
-                    rawParticipante.ParticipanteId,
-                    TipoIdentidad.PASAPORTE,
-                    egresado.Pasaporte
-                );
-            }
-
-            // Creando Egresado
-            var nuevoEgresado = new Egresado
-            {
-                ParticipanteId = rawParticipante.ParticipanteId,
-                Nacionalidad = rawNacionalidad.PaisId,
-                PrimerNombre = egresado.PrimerNombre,
-                SegundoNombre = egresado.SegundoNombre,
-                PrimerApellido = egresado.PrimerApellido,
-                SegundoApellido = egresado.SegundoApellido,
-                Genero = egresado.Genero,
-                FechaNac = egresado.FechaNacimiento,
-                MatriculaEgresado = egresado.MatriculaEgresado,
-                MatriculaGrado = egresado.MatriculaGrado
-            };
-
-            var resultCrearEgresado = context
-                .Egresados
-                .Add(nuevoEgresado)
-                ?? throw Utils.APIError(
-                    0,
-                    "Hubo un error al procesar la solicitud. Intentelo de nuevo",
-                    StatusCodes.Status500InternalServerError
-                );
-
-            context.SaveChanges();
-
-            transaction.Commit();
-
-            return Results.Ok(resultCrearEgresado.Entity.EgresadoId);
-        }
-        catch (Exception ex)
-        {
-            transaction?.Rollback();
-            return Utils.HandleError(ex);
-        }
-        finally
-        {
-            transaction?.Dispose();
-            context?.Dispose();
-        }
-    }
-
-    [Authorize]
     [HttpPut("FotoPerfil/{egresadoId}")]
     public async Task<IResult> SubirFotoPerfil(int egresadoId, [FromForm] IFormFile foto)
     {
@@ -587,383 +381,8 @@ public class EgresadoController : Controller
         }
     }
 
-    [Authorize]
-    [HttpPut]
-    public IResult ModificarEgresado(EgresadoPUTDTO egresado)
-    {
-        PortalEgresadosContext? context = null;
-        IDbContextTransaction? transaction = null;
-
-        try
-        {
-            context = new PortalEgresadosContext();
-            transaction = context.Database.BeginTransaction();
-
-            if (!Utils.IsTokenAuthorizedEmail(context, egresado.Id, User))
-            {
-                throw Utils.APIError(
-                    0,
-                    "Sin autorizacion para realizar la accion",
-                    StatusCodes.Status400BadRequest
-                );
-            }
-
-            if (egresado.Genero != "M" && egresado.Genero != "F")
-            {
-                throw Utils.APIError(
-                    0,
-                    "Valor para genero incorrecto. Debe ser M (masculino) o F (femenino).",
-                    StatusCodes.Status400BadRequest
-                );
-            }
-
-            if (egresado.Pasaporte == null && egresado.Cedula == null)
-            {
-                throw Utils.APIError(
-                    0,
-                    "Se espera informacion de la cedula y/o pasaporte, pero ninguno de los dos esta",
-                    StatusCodes.Status400BadRequest
-                );
-            }
-
-            if (egresado.Cedula != null && egresado.Cedula.Length == 0 &&
-            egresado.Pasaporte != null && egresado.Pasaporte.Length == 0)
-            {
-                throw Utils.APIError(
-                    0,
-                    "Se espera informacion de la cedula y/o pasaporte, pero ninguno de los dos esta",
-                    StatusCodes.Status400BadRequest
-                );
-            }
-
-            var rawEgresado = context
-                .Egresados
-                .Include(e => e.Participante)
-                .ThenInclude(p => p.Direccion)
-                .FirstOrDefault(e => e.EgresadoId == egresado.Id);
-
-            if (rawEgresado == null)
-            {
-                return Results.Json(
-                    data: "No existen registros para el egresado suministrado",
-                    statusCode: StatusCodes.Status500InternalServerError
-                );
-            }
-
-            var rawParticipante = rawEgresado.Participante;
-
-            if (egresado.Cedula != null)
-            {
-                if (egresado.Cedula.Length > 0)
-                {
-                    ModificarDocumento(
-                        context,
-                        rawParticipante.ParticipanteId,
-                        TipoIdentidad.CEDULA,
-                        egresado.Cedula
-                    );
-                }
-                else
-                {
-                    EliminarDocumento(
-                        context,
-                        rawParticipante.ParticipanteId,
-                        TipoIdentidad.CEDULA
-                    );
-                }
-            }
-
-            if (egresado.Pasaporte != null)
-            {
-                if (egresado.Pasaporte.Length > 0)
-                {
-                    ModificarDocumento(
-                        context,
-                        rawParticipante.ParticipanteId,
-                        TipoIdentidad.PASAPORTE,
-                        egresado.Pasaporte
-                    );
-                }
-                else
-                {
-                    EliminarDocumento(
-                        context,
-                        rawParticipante.ParticipanteId,
-                        TipoIdentidad.PASAPORTE
-                    );
-                }
-            }
-
-            var rawMunicipio = ObtenerMunicipio(context, egresado.Provincia);
-
-            rawParticipante
-                .Direccion
-                .LocalidadPostalId = rawMunicipio.LocalidadPostalId;
-
-            rawEgresado.PrimerApellido = egresado.PrimerApellido;
-            rawEgresado.SegundoApellido = egresado.SegundoApellido;
-            rawEgresado.PrimerNombre = egresado.PrimerNombre;
-            rawEgresado.SegundoNombre = egresado.SegundoNombre;
-            rawEgresado.Genero = egresado.Genero;
-            rawEgresado.FechaNac = egresado.FechaNac;
-            rawEgresado.Acerca = egresado.Acerca;
-
-            context.SaveChanges();
-
-            transaction.Commit();
-
-            return Results.Ok();
-        }
-        catch (Exception ex)
-        {
-            transaction?.Rollback();
-            return Utils.HandleError(ex);
-        }
-        finally
-        {
-            transaction?.Dispose();
-            context?.Dispose();
-        }
-    }
-
-    [HttpGet("{limit}/{offset}")]
-    public IResult Busqueda([FromQuery] string? valor, int limit, int offset)
-    {
-        PortalEgresadosContext? context = null;
-
-        try
-        {
-            context = new PortalEgresadosContext();
-
-            var rawEgresados = context
-                .Egresados
-                .Where(e => EF.Functions.Like(e.PrimerNombre, $"%{valor}%") ||
-                    EF.Functions.Like(e.PrimerApellido, $"%{valor}%"))
-                .Include(e => e.Participante)
-                .Include(e => e.NacionalidadNavigation)
-                .OrderBy(b => b.PrimerNombre)
-                .Skip(offset * limit)
-                .Take(limit)
-                .ToList()
-            ?? throw Utils.APIError(
-                0,
-                "Hubo un error al procesar la solicitud. Intentelo de nuevo",
-                StatusCodes.Status500InternalServerError
-            );
-
-            var egresados = new List<dynamic>();
-
-            foreach (var rawEgresado in rawEgresados)
-            {
-                // Obteniendo los documentos del egresado
-                var rawDocumentos = context
-                    .Documentos
-                    .Where(ed => ed.ParticipanteId == rawEgresado.ParticipanteId)
-                    .Include(ed => ed.TipoDocumento)
-                    .ToList();
-
-                var documentos = new List<dynamic>();
-
-                foreach (var rawDocumento in rawDocumentos)
-                {
-                    dynamic documento = new
-                    {
-                        documentoId = rawDocumento.DocumentoId,
-                        participanteId = rawDocumento.ParticipanteId,
-                        tipoDocId = rawDocumento.TipoDocumentoId,
-                        documentoNo = rawDocumento.DocumentoNo,
-                        tipoDoc = rawDocumento.TipoDocumento.Nombre
-                    };
-
-                    documentos.Add(documento);
-                }
-
-                // Obteniendo los contactos del egresado
-                var rawContactos = context
-                    .Contactos
-                    .Where(ed => ed.ParticipanteId == rawEgresado.ParticipanteId)
-                    .Include(ed => ed.TipoContacto)
-                    .ToList();
-
-                var contactos = new List<dynamic>();
-
-                foreach (var rawContacto in rawContactos)
-                {
-                    dynamic contacto = new
-                    {
-                        contactoId = rawContacto.ContactoId,
-                        participanteId = rawContacto.ParticipanteId,
-                        tipoContactoId = rawContacto.TipoContactoId,
-                        nombre = rawContacto.Nombre,
-                        tipoContacto = rawContacto.TipoContacto.Nombre
-                    };
-
-                    contactos.Add(contacto);
-                }
-
-                // Obteniendo los idiomas del egresado
-                var rawIdiomas = context
-                    .EgresadoIdiomas
-                    .Where(i => i.EgresadoId == rawEgresado.EgresadoId)
-                    .Include(i => i.Idioma)
-                    .ToList();
-
-                var idiomas = new List<dynamic>();
-
-                foreach (var rawIdioma in rawIdiomas)
-                {
-                    dynamic idioma = new
-                    {
-                        id = rawIdioma.IdiomaId,
-                        nombre = rawIdioma.Idioma.Nombre,
-                        egresadIdiomaId = rawIdioma.EgresadoIdiomaId
-                    };
-
-                    idiomas.Add(idioma);
-                }
-
-                // Obteniendo las experiencias laborales del egresado
-                var rawExperienciaLaborales = context
-                    .ExperienciaLaborals
-                    .Where(e => e.EgresadoId == rawEgresado.EgresadoId)
-                    .ToList();
-
-                var experiencias = new List<dynamic>();
-
-                foreach (var rawExperienciaLaboral in rawExperienciaLaborales)
-                {
-                    dynamic experienciaLaboral = new
-                    {
-                        id = rawExperienciaLaboral.ExperienciaLaboralId,
-                        organizacion = rawExperienciaLaboral.Organizacion,
-                        posicion = rawExperienciaLaboral.Posicion,
-                        fechantrada = rawExperienciaLaboral.FechaEntrada,
-                        fechaSalida = rawExperienciaLaboral.FechaSalida
-                    };
-
-                    experiencias.Add(experienciaLaboral);
-                }
-
-                // Obteniendo las educaciones del egresado
-                var rawEducaciones = context
-                    .Educacions
-                    .Where(e => e.EgresadoId == rawEgresado.EgresadoId)
-                    .Include(e => e.Formacion)
-                    .ToList();
-
-                var educaciones = new List<dynamic>();
-
-                foreach (var rawEducacion in rawEducaciones)
-                {
-                    dynamic educacion = new
-                    {
-                        id = rawEducacion.EducacionId,
-                        organizacion = rawEducacion.Organizacion,
-                        formacionId = rawEducacion.Formacion.FormacionId,
-                        nivel = rawEducacion.Formacion.Nombre,
-                    };
-
-                    educaciones.Add(educacion);
-                }
-
-                // Obteniendo las habilidades del egresado
-                var rawHabilidades = context
-                    .EgresadoHabilidads
-                    .Where(eh => eh.EgresadoId == rawEgresado.EgresadoId)
-                    .Include(eh => eh.Habilidad)
-                    .ToList();
-
-                var habilidades = new List<dynamic>();
-
-                foreach (var rawHabilidad in rawHabilidades)
-                {
-                    dynamic habilidad = new
-                    {
-                        id = rawHabilidad.HabilidadId,
-                        valor = rawHabilidad.Habilidad.Nombre,
-                        egresadoHabilidadId = rawHabilidad.EgresadoHabilidadId
-                    };
-
-                    habilidades.Add(habilidad);
-                }
-
-                // Determinando si el egresado es destacado
-                var destacado = context
-                    .EgresadoDestacados
-                    .Where(d =>
-                        d.EgresadoId == rawEgresado.EgresadoId &&
-                        d.FechaHasta >= DateTime.Now
-                    ).Any();
-
-                var ciudadDelEgresado = context
-                    .Egresados
-                    .Where(e => e.EgresadoId == rawEgresado.EgresadoId)
-                    .Select(e => e.Participante.Direccion.LocalidadPostal.Ciudad)
-                    .FirstOrDefault();
-
-                var ciudad = "";
-
-                if (ciudadDelEgresado != null)
-                {
-                    ciudad = ciudadDelEgresado.Nombre;
-                }
-                else
-                {
-                    ciudad = "Ciudad No Registrada";
-                }
-
-                var egresadoId = rawEgresado.EgresadoId;
-                var primerNombre = rawEgresado.PrimerNombre;
-                var segundoNombre = rawEgresado.SegundoNombre;
-                var primerApellido = rawEgresado.PrimerApellido;
-                var segundoApellido = rawEgresado.SegundoApellido;
-                var genero = rawEgresado.Genero;
-                var fechaNac = rawEgresado.FechaNac;
-                var fotoPerfilUrl = rawEgresado.Participante.FotoPerfilUrl;
-                var acerca = rawEgresado.Acerca;
-                var activo = rawEgresado.Estado;
-                var nacionalidad = rawEgresado.NacionalidadNavigation.Nombre;
-
-                dynamic egresado = new
-                {
-                    EgresadoId = egresadoId,
-                    PrimerNombre = primerNombre,
-                    SegundoNombre = segundoNombre,
-                    PrimerApellido = primerApellido,
-                    SegundoApellido = segundoApellido,
-                    DocumentoEgresados = documentos,
-                    Genero = genero,
-                    FechaNac = fechaNac,
-                    FotoPerfilUrl = fotoPerfilUrl,
-                    Acerca = acerca,
-                    Estado = activo,
-                    Destacado = destacado,
-                    Nacionalidad = nacionalidad,
-                    EgresadoIdiomas = idiomas,
-                    ExperienciaLaborals = experiencias,
-                    Educacions = educaciones,
-                    Contacto = contactos,
-                    Habilidades = habilidades,
-                    Ciudad = ciudad
-                };
-
-                egresados.Add(egresado);
-            }
-
-            return Results.Json(
-                data: egresados,
-                statusCode: StatusCodes.Status200OK
-            );
-        }
-
-        catch (Exception ex)
-        {
-            return Utils.HandleError(ex);
-        }
-    }
-
     [HttpGet("{IdEgresado}")]
-    public IResult BusquedaId(int IdEgresado)
+    public IResult BuscarEgresado(int IdEgresado)
     {
 
         PortalEgresadosContext? context = null;
@@ -1235,4 +654,582 @@ public class EgresadoController : Controller
         }
     }
 
+    [HttpGet("{limit}/{offset}")]
+    public IResult BuscarEgresados([FromQuery] string? valor, int limit, int offset)
+    {
+        PortalEgresadosContext? context = null;
+
+        try
+        {
+            context = new PortalEgresadosContext();
+
+            var rawEgresados = context
+                .Egresados
+                .Where(e => EF.Functions.Like(e.PrimerNombre, $"%{valor}%") ||
+                    EF.Functions.Like(e.PrimerApellido, $"%{valor}%"))
+                .Include(e => e.Participante)
+                .Include(e => e.NacionalidadNavigation)
+                .OrderBy(b => b.PrimerNombre)
+                .Skip((offset - 1) * limit)
+                .Take(limit)
+                .ToList()
+            ?? throw Utils.APIError(
+                0,
+                "Hubo un error al procesar la solicitud. Intentelo de nuevo",
+                StatusCodes.Status500InternalServerError
+            );
+
+            var egresados = new List<dynamic>();
+
+            foreach (var rawEgresado in rawEgresados)
+            {
+                // Obteniendo los documentos del egresado
+                var rawDocumentos = context
+                    .Documentos
+                    .Where(ed => ed.ParticipanteId == rawEgresado.ParticipanteId)
+                    .Include(ed => ed.TipoDocumento)
+                    .ToList();
+
+                var documentos = new List<dynamic>();
+
+                foreach (var rawDocumento in rawDocumentos)
+                {
+                    dynamic documento = new
+                    {
+                        documentoId = rawDocumento.DocumentoId,
+                        participanteId = rawDocumento.ParticipanteId,
+                        tipoDocId = rawDocumento.TipoDocumentoId,
+                        documentoNo = rawDocumento.DocumentoNo,
+                        tipoDoc = rawDocumento.TipoDocumento.Nombre
+                    };
+
+                    documentos.Add(documento);
+                }
+
+                // Obteniendo los contactos del egresado
+                var rawContactos = context
+                    .Contactos
+                    .Where(ed => ed.ParticipanteId == rawEgresado.ParticipanteId)
+                    .Include(ed => ed.TipoContacto)
+                    .ToList();
+
+                var contactos = new List<dynamic>();
+
+                foreach (var rawContacto in rawContactos)
+                {
+                    dynamic contacto = new
+                    {
+                        contactoId = rawContacto.ContactoId,
+                        participanteId = rawContacto.ParticipanteId,
+                        tipoContactoId = rawContacto.TipoContactoId,
+                        nombre = rawContacto.Nombre,
+                        tipoContacto = rawContacto.TipoContacto.Nombre
+                    };
+
+                    contactos.Add(contacto);
+                }
+
+                // Obteniendo los idiomas del egresado
+                var rawIdiomas = context
+                    .EgresadoIdiomas
+                    .Where(i => i.EgresadoId == rawEgresado.EgresadoId)
+                    .Include(i => i.Idioma)
+                    .ToList();
+
+                var idiomas = new List<dynamic>();
+
+                foreach (var rawIdioma in rawIdiomas)
+                {
+                    dynamic idioma = new
+                    {
+                        id = rawIdioma.IdiomaId,
+                        nombre = rawIdioma.Idioma.Nombre,
+                        egresadIdiomaId = rawIdioma.EgresadoIdiomaId
+                    };
+
+                    idiomas.Add(idioma);
+                }
+
+                // Obteniendo las experiencias laborales del egresado
+                var rawExperienciaLaborales = context
+                    .ExperienciaLaborals
+                    .Where(e => e.EgresadoId == rawEgresado.EgresadoId)
+                    .ToList();
+
+                var experiencias = new List<dynamic>();
+
+                foreach (var rawExperienciaLaboral in rawExperienciaLaborales)
+                {
+                    dynamic experienciaLaboral = new
+                    {
+                        id = rawExperienciaLaboral.ExperienciaLaboralId,
+                        organizacion = rawExperienciaLaboral.Organizacion,
+                        posicion = rawExperienciaLaboral.Posicion,
+                        fechantrada = rawExperienciaLaboral.FechaEntrada,
+                        fechaSalida = rawExperienciaLaboral.FechaSalida
+                    };
+
+                    experiencias.Add(experienciaLaboral);
+                }
+
+                // Obteniendo las educaciones del egresado
+                var rawEducaciones = context
+                    .Educacions
+                    .Where(e => e.EgresadoId == rawEgresado.EgresadoId)
+                    .Include(e => e.Formacion)
+                    .ToList();
+
+                var educaciones = new List<dynamic>();
+
+                foreach (var rawEducacion in rawEducaciones)
+                {
+                    dynamic educacion = new
+                    {
+                        id = rawEducacion.EducacionId,
+                        organizacion = rawEducacion.Organizacion,
+                        formacionId = rawEducacion.Formacion.FormacionId,
+                        nivel = rawEducacion.Formacion.Nombre,
+                    };
+
+                    educaciones.Add(educacion);
+                }
+
+                // Obteniendo las habilidades del egresado
+                var rawHabilidades = context
+                    .EgresadoHabilidads
+                    .Where(eh => eh.EgresadoId == rawEgresado.EgresadoId)
+                    .Include(eh => eh.Habilidad)
+                    .ToList();
+
+                var habilidades = new List<dynamic>();
+
+                foreach (var rawHabilidad in rawHabilidades)
+                {
+                    dynamic habilidad = new
+                    {
+                        id = rawHabilidad.HabilidadId,
+                        valor = rawHabilidad.Habilidad.Nombre,
+                        egresadoHabilidadId = rawHabilidad.EgresadoHabilidadId
+                    };
+
+                    habilidades.Add(habilidad);
+                }
+
+                // Determinando si el egresado es destacado
+                var destacado = context
+                    .EgresadoDestacados
+                    .Where(d =>
+                        d.EgresadoId == rawEgresado.EgresadoId &&
+                        d.FechaHasta >= DateTime.Now
+                    ).Any();
+
+                var ciudadDelEgresado = context
+                    .Egresados
+                    .Where(e => e.EgresadoId == rawEgresado.EgresadoId)
+                    .Select(e => e.Participante.Direccion.LocalidadPostal.Ciudad)
+                    .FirstOrDefault();
+
+                var ciudad = "";
+
+                if (ciudadDelEgresado != null)
+                {
+                    ciudad = ciudadDelEgresado.Nombre;
+                }
+                else
+                {
+                    ciudad = "Ciudad No Registrada";
+                }
+
+                var egresadoId = rawEgresado.EgresadoId;
+                var primerNombre = rawEgresado.PrimerNombre;
+                var segundoNombre = rawEgresado.SegundoNombre;
+                var primerApellido = rawEgresado.PrimerApellido;
+                var segundoApellido = rawEgresado.SegundoApellido;
+                var genero = rawEgresado.Genero;
+                var fechaNac = rawEgresado.FechaNac;
+                var fotoPerfilUrl = rawEgresado.Participante.FotoPerfilUrl;
+                var acerca = rawEgresado.Acerca;
+                var activo = rawEgresado.Estado;
+                var nacionalidad = rawEgresado.NacionalidadNavigation.Nombre;
+
+                dynamic egresado = new
+                {
+                    EgresadoId = egresadoId,
+                    PrimerNombre = primerNombre,
+                    SegundoNombre = segundoNombre,
+                    PrimerApellido = primerApellido,
+                    SegundoApellido = segundoApellido,
+                    DocumentoEgresados = documentos,
+                    Genero = genero,
+                    FechaNac = fechaNac,
+                    FotoPerfilUrl = fotoPerfilUrl,
+                    Acerca = acerca,
+                    Estado = activo,
+                    Destacado = destacado,
+                    Nacionalidad = nacionalidad,
+                    EgresadoIdiomas = idiomas,
+                    ExperienciaLaborals = experiencias,
+                    Educacions = educaciones,
+                    Contacto = contactos,
+                    Habilidades = habilidades,
+                    Ciudad = ciudad
+                };
+
+                egresados.Add(egresado);
+            }
+
+            return Results.Json(
+                data: egresados,
+                statusCode: StatusCodes.Status200OK
+            );
+        }
+
+        catch (Exception ex)
+        {
+            return Utils.HandleError(ex);
+        }
+    }
+
+    [Authorize]
+    [HttpPost]
+    public IResult Agregar(EgresadoPOSTDTO egresado)
+    {
+        PortalEgresadosContext? context = null;
+        IDbContextTransaction? transaction = null;
+
+        try
+        {
+            context = new PortalEgresadosContext();
+            transaction = context.Database.BeginTransaction();
+
+            if (!Utils.isTokenAdministrator(User))
+            {
+                throw Utils.APIError(
+                    0,
+                    "Sin autorizacion para realizar la accion",
+                    StatusCodes.Status400BadRequest
+                );
+            }
+
+            // Validando la informacion del genero
+            if (egresado.Genero != "M" && egresado.Genero != "F")
+            {
+                throw Utils.APIError(
+                    0,
+                    $"Valor para genero incorrecto. Debe ser M (masculino) o F (femenino).",
+                    StatusCodes.Status400BadRequest
+                );
+            }
+
+            // Validando la informacion del pasaporte. Se debe suministrar uno o ambos, pero no ninguno
+            if (egresado.Pasaporte == null && egresado.Cedula == null)
+            {
+                throw Utils.APIError(
+                    0,
+                    "Se espera informacion de la cedula y/o pasaporte, pero ninguno de los dos esta",
+                    StatusCodes.Status400BadRequest
+                );
+            }
+
+            // Validando longitud de matriculas
+            if (egresado.MatriculaEgresado.Length == 0 || egresado.MatriculaGrado.Length == 0 ||
+            egresado.MatriculaEgresado.Length > 11 || egresado.MatriculaGrado.Length > 11)
+            {
+                throw Utils.APIError(
+                    0,
+                    "Ambas matriculas deben tener una longitud mayor que 0 e igual o menor que 11",
+                    StatusCodes.Status400BadRequest
+                );
+            }
+
+            // Verificando si existe el email
+            var existeEmail = context
+                .Contactos
+                .Where(c => c.Nombre == egresado.Email)
+                .Count() == 1;
+
+            if (existeEmail)
+            {
+                throw Utils.APIError(
+                    0,
+                    $"El email '${egresado.Email}' no se encuentra disponible",
+                    StatusCodes.Status400BadRequest
+                );
+            }
+
+            // Verificando si existe la nacionalidad.
+            var rawNacionalidad = context
+                .Pais
+                .FirstOrDefault(n =>
+                    n.Nombre == egresado.Nacionalidad
+                )
+                ?? throw Utils.APIError(
+                    0,
+                    $"No existe la nacionalidad con el nombre '{egresado.Nacionalidad}'",
+                    StatusCodes.Status400BadRequest
+                );
+
+            // Verificando si existe el tipo de participante.
+            var rawTipoParticipante = context
+                .TipoParticipantes
+                .FirstOrDefault(t =>
+                    t.Nombre == egresado.TipoParticipante
+                )
+                ?? throw Utils.APIError(
+                    0,
+                    $"No existe el tipo de participante '{egresado.TipoParticipante}'",
+                    StatusCodes.Status400BadRequest
+                );
+
+            // Verificando si existe alguna o ambas matriculas
+            var existenMatriculas = context
+                .Egresados
+                .Where(e =>
+                    e.MatriculaEgresado == egresado.MatriculaEgresado ||
+                    e.MatriculaEgresado == egresado.MatriculaGrado ||
+                    e.MatriculaGrado == egresado.MatriculaEgresado ||
+                    e.MatriculaGrado == egresado.MatriculaGrado
+                )
+                .Any();
+
+            if (existenMatriculas)
+            {
+                throw Utils.APIError(
+                    0,
+                    $"Ya existe un egresado registrado con alguna de las matriculas suministradas",
+                    StatusCodes.Status400BadRequest
+                );
+            }
+
+            // Creado usuario
+            var rawUsuario = CrearUsuario(
+                context,
+                egresado.Rol,
+                egresado.UserName,
+                egresado.Password
+            );
+
+            var rawDireccion = CrearProvincia(context, egresado.Provincia);
+
+            // Creando Participante
+            var resultCrearParticipante = context
+                .Participantes
+                .Add(new Participante
+                {
+                    TipoParticipanteId = rawTipoParticipante.TipoParticipanteId,
+                    UsuarioId = rawUsuario.UsuarioId,
+                    EsEgresado = true,
+                    DireccionId = rawDireccion.DireccionId
+                })
+                ?? throw Utils.APIError(
+                    0,
+                    "Hubo un error al procesar la solicitud. Intentelo de nuevo",
+                    StatusCodes.Status500InternalServerError
+                );
+
+            context.SaveChanges();
+
+            var rawParticipante = resultCrearParticipante.Entity;
+
+            // Creando documentos
+            if (egresado.Cedula != null)
+            {
+                CrearDocumento(
+                    context,
+                    rawParticipante.ParticipanteId,
+                    TipoIdentidad.CEDULA,
+                    egresado.Cedula
+                );
+            }
+
+            if (egresado.Pasaporte != null)
+            {
+                CrearDocumento(
+                    context,
+                    rawParticipante.ParticipanteId,
+                    TipoIdentidad.PASAPORTE,
+                    egresado.Pasaporte
+                );
+            }
+
+            // Creando Egresado
+            var nuevoEgresado = new Egresado
+            {
+                ParticipanteId = rawParticipante.ParticipanteId,
+                Nacionalidad = rawNacionalidad.PaisId,
+                PrimerNombre = egresado.PrimerNombre,
+                SegundoNombre = egresado.SegundoNombre,
+                PrimerApellido = egresado.PrimerApellido,
+                SegundoApellido = egresado.SegundoApellido,
+                Genero = egresado.Genero,
+                FechaNac = egresado.FechaNacimiento,
+                MatriculaEgresado = egresado.MatriculaEgresado,
+                MatriculaGrado = egresado.MatriculaGrado
+            };
+
+            var resultCrearEgresado = context
+                .Egresados
+                .Add(nuevoEgresado)
+                ?? throw Utils.APIError(
+                    0,
+                    "Hubo un error al procesar la solicitud. Intentelo de nuevo",
+                    StatusCodes.Status500InternalServerError
+                );
+
+            context.SaveChanges();
+
+            transaction.Commit();
+
+            return Results.Ok(resultCrearEgresado.Entity.EgresadoId);
+        }
+        catch (Exception ex)
+        {
+            transaction?.Rollback();
+            return Utils.HandleError(ex);
+        }
+        finally
+        {
+            transaction?.Dispose();
+            context?.Dispose();
+        }
+    }
+
+    [Authorize]
+    [HttpPut]
+    public IResult ModificarEgresado(EgresadoPUTDTO egresado)
+    {
+        PortalEgresadosContext? context = null;
+        IDbContextTransaction? transaction = null;
+
+        try
+        {
+            context = new PortalEgresadosContext();
+            transaction = context.Database.BeginTransaction();
+
+            if (!Utils.IsTokenAuthorizedEmail(context, egresado.Id, User))
+            {
+                throw Utils.APIError(
+                    0,
+                    "Sin autorizacion para realizar la accion",
+                    StatusCodes.Status400BadRequest
+                );
+            }
+
+            if (egresado.Genero != "M" && egresado.Genero != "F")
+            {
+                throw Utils.APIError(
+                    0,
+                    "Valor para genero incorrecto. Debe ser M (masculino) o F (femenino).",
+                    StatusCodes.Status400BadRequest
+                );
+            }
+
+            if (egresado.Pasaporte == null && egresado.Cedula == null)
+            {
+                throw Utils.APIError(
+                    0,
+                    "Se espera informacion de la cedula y/o pasaporte, pero ninguno de los dos esta",
+                    StatusCodes.Status400BadRequest
+                );
+            }
+
+            if (egresado.Cedula != null && egresado.Cedula.Length == 0 &&
+            egresado.Pasaporte != null && egresado.Pasaporte.Length == 0)
+            {
+                throw Utils.APIError(
+                    0,
+                    "Se espera informacion de la cedula y/o pasaporte, pero ninguno de los dos esta",
+                    StatusCodes.Status400BadRequest
+                );
+            }
+
+            var rawEgresado = context
+                .Egresados
+                .Include(e => e.Participante)
+                .ThenInclude(p => p.Direccion)
+                .FirstOrDefault(e => e.EgresadoId == egresado.Id);
+
+            if (rawEgresado == null)
+            {
+                return Results.Json(
+                    data: "No existen registros para el egresado suministrado",
+                    statusCode: StatusCodes.Status500InternalServerError
+                );
+            }
+
+            var rawParticipante = rawEgresado.Participante;
+
+            if (egresado.Cedula != null)
+            {
+                if (egresado.Cedula.Length > 0)
+                {
+                    ModificarDocumento(
+                        context,
+                        rawParticipante.ParticipanteId,
+                        TipoIdentidad.CEDULA,
+                        egresado.Cedula
+                    );
+                }
+                else
+                {
+                    EliminarDocumento(
+                        context,
+                        rawParticipante.ParticipanteId,
+                        TipoIdentidad.CEDULA
+                    );
+                }
+            }
+
+            if (egresado.Pasaporte != null)
+            {
+                if (egresado.Pasaporte.Length > 0)
+                {
+                    ModificarDocumento(
+                        context,
+                        rawParticipante.ParticipanteId,
+                        TipoIdentidad.PASAPORTE,
+                        egresado.Pasaporte
+                    );
+                }
+                else
+                {
+                    EliminarDocumento(
+                        context,
+                        rawParticipante.ParticipanteId,
+                        TipoIdentidad.PASAPORTE
+                    );
+                }
+            }
+
+            var rawMunicipio = ObtenerMunicipio(context, egresado.Provincia);
+
+            rawParticipante
+                .Direccion
+                .LocalidadPostalId = rawMunicipio.LocalidadPostalId;
+
+            rawEgresado.PrimerApellido = egresado.PrimerApellido;
+            rawEgresado.SegundoApellido = egresado.SegundoApellido;
+            rawEgresado.PrimerNombre = egresado.PrimerNombre;
+            rawEgresado.SegundoNombre = egresado.SegundoNombre;
+            rawEgresado.Genero = egresado.Genero;
+            rawEgresado.FechaNac = egresado.FechaNac;
+            rawEgresado.Acerca = egresado.Acerca;
+
+            context.SaveChanges();
+
+            transaction.Commit();
+
+            return Results.Ok();
+        }
+        catch (Exception ex)
+        {
+            transaction?.Rollback();
+            return Utils.HandleError(ex);
+        }
+        finally
+        {
+            transaction?.Dispose();
+            context?.Dispose();
+        }
+    }
 }

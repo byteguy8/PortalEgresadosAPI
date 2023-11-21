@@ -5,11 +5,11 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+
 namespace PortalEgresadosAPI;
 
 [ApiController]
 [Route("[controller]")]
-
 public class UsuarioController : Controller
 {
     [HttpPost("Email")]
