@@ -921,37 +921,12 @@ public class EgresadoController : Controller
                     Habilidades.Add(h);
                 }
 
-                var EgresadoDestacado = context
+                var esDestacado = context
                     .EgresadoDestacados
-                    .Where(ed => ed.EgresadoId == item.EgresadoId)
-                    .ToList();
-
-                var destacado = new List<dynamic>();
-                var egresadoDestacado = false;
-
-                if (EgresadoDestacado.Any())
-                {
-                    foreach (var edestacado in EgresadoDestacado)
-                    {
-                        var egresadoHasta = edestacado.FechaHasta;
-
-                        if (egresadoHasta > DateTime.Now)
-                        {
-                            egresadoDestacado = true;
-                        }
-
-                        dynamic ed = new
-                        {
-                            Observacion = edestacado.Observacion,
-                            FechaDesde = edestacado.FechaDesde,
-                            FechaHasta = edestacado.FechaHasta,
-                            egresadoDestacado
-                        };
-
-                        destacado.Add(ed);
-
-                    }
-                }
+                    .Where(d =>
+                        d.EgresadoId == item.EgresadoId &&
+                        d.FechaHasta >= DateTime.Now
+                    ).Count() >= 1;
 
                 var ciudadDelEgresado = context
                     .Egresados
@@ -999,7 +974,7 @@ public class EgresadoController : Controller
                     FotoPerfilUrl = FotoPerfilUrl,
                     Acerca = about,
                     Estado = activo,
-                    Destacado = destacado,
+                    Destacado = esDestacado,
                     Nacionalidad = Nacionalidad,
                     EgresadoIdiomas = Idiomas,
                     ExperienciaLaborals = Experiencias,
