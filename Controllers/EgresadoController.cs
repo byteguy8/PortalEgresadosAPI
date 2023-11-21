@@ -727,7 +727,7 @@ public class EgresadoController : Controller
     }
 
     [HttpGet("{limit}/{offset}")]
-    public IResult Busqueda([FromQuery] String? valor, int limit, int offset)
+    public IResult Busqueda([FromQuery] string? valor, int limit, int offset)
     {
         PortalEgresadosContext? context = null;
 
@@ -735,170 +735,169 @@ public class EgresadoController : Controller
         {
             context = new PortalEgresadosContext();
 
-            var busqueda = context
+            var rawEgresados = context
                 .Egresados
-                .Where(b => EF.Functions.Like(b.PrimerNombre, $"%{valor}%") || EF.Functions.Like(b.PrimerApellido, $"%{valor}%"))
+                .Where(e => EF.Functions.Like(e.PrimerNombre, $"%{valor}%") ||
+                    EF.Functions.Like(e.PrimerApellido, $"%{valor}%"))
                 .Include(e => e.Participante)
                 .Include(e => e.NacionalidadNavigation)
                 .OrderBy(b => b.PrimerNombre)
                 .Skip(offset * limit)
                 .Take(limit)
-                .ToList();
+                .ToList()
+            ?? throw Utils.APIError(
+                0,
+                "Hubo un error al procesar la solicitud. Intentelo de nuevo",
+                StatusCodes.Status500InternalServerError
+            );
 
-            // Verificando si existe algun usuario con ese valor. Si no existe, la operacion debe ser abortada
-            if (!busqueda.Any())
+            var egresados = new List<dynamic>();
+
+            foreach (var rawEgresado in rawEgresados)
             {
-                return Results.Json(data: busqueda, statusCode: StatusCodes.Status400BadRequest);
-            }
-
-            var Egresado = new List<dynamic>();
-
-            foreach (var item in busqueda)
-            {
-
-                var EgresadoDocumento = context
+                // Obteniendo los documentos del egresado
+                var rawDocumentos = context
                     .Documentos
-                    .Where(ed => ed.ParticipanteId == item.ParticipanteId)
+                    .Where(ed => ed.ParticipanteId == rawEgresado.ParticipanteId)
                     .Include(ed => ed.TipoDocumento)
                     .ToList();
 
-                var documento = new List<dynamic>();
+                var documentos = new List<dynamic>();
 
-                foreach (var documentos in EgresadoDocumento)
+                foreach (var rawDocumento in rawDocumentos)
                 {
-                    dynamic d = new
+                    dynamic documento = new
                     {
-                        documentoId = documentos.DocumentoId,
-                        participanteId = documentos.ParticipanteId,
-                        tipoDocId = documentos.TipoDocumentoId,
-                        documentoNo = documentos.DocumentoNo,
-                        tipoDoc = documentos.TipoDocumento.Nombre
-
+                        documentoId = rawDocumento.DocumentoId,
+                        participanteId = rawDocumento.ParticipanteId,
+                        tipoDocId = rawDocumento.TipoDocumentoId,
+                        documentoNo = rawDocumento.DocumentoNo,
+                        tipoDoc = rawDocumento.TipoDocumento.Nombre
                     };
 
-                    documento.Add(d);
-
+                    documentos.Add(documento);
                 }
 
-
-                var EgresadoContacto = context
+                // Obteniendo los contactos del egresado
+                var rawContactos = context
                     .Contactos
-                    .Where(ed => ed.ParticipanteId == item.ParticipanteId)
+                    .Where(ed => ed.ParticipanteId == rawEgresado.ParticipanteId)
                     .Include(ed => ed.TipoContacto)
                     .ToList();
 
-                var contacto = new List<dynamic>();
+                var contactos = new List<dynamic>();
 
-                foreach (var contactos in EgresadoContacto)
+                foreach (var rawContacto in rawContactos)
                 {
-                    dynamic c = new
+                    dynamic contacto = new
                     {
-                        contactoId = contactos.ContactoId,
-                        participanteId = contactos.ParticipanteId,
-                        tipoContactoId = contactos.TipoContactoId,
-                        nombre = contactos.Nombre,
-                        tipoContacto = contactos.TipoContacto.Nombre
-
+                        contactoId = rawContacto.ContactoId,
+                        participanteId = rawContacto.ParticipanteId,
+                        tipoContactoId = rawContacto.TipoContactoId,
+                        nombre = rawContacto.Nombre,
+                        tipoContacto = rawContacto.TipoContacto.Nombre
                     };
 
-                    contacto.Add(c);
-
+                    contactos.Add(contacto);
                 }
 
-                var EgresadoIdiomas = context
+                // Obteniendo los idiomas del egresado
+                var rawIdiomas = context
                     .EgresadoIdiomas
-                    .Where(i => i.EgresadoId == item.EgresadoId)
+                    .Where(i => i.EgresadoId == rawEgresado.EgresadoId)
                     .Include(i => i.Idioma)
                     .ToList();
 
-                var Idiomas = new List<dynamic>();
+                var idiomas = new List<dynamic>();
 
-                foreach (var idioma in EgresadoIdiomas)
+                foreach (var rawIdioma in rawIdiomas)
                 {
-                    dynamic i = new
+                    dynamic idioma = new
                     {
-                        id = idioma.IdiomaId,
-                        nombre = idioma.Idioma.Nombre,
-                        egresadIdiomaId = idioma.EgresadoIdiomaId
+                        id = rawIdioma.IdiomaId,
+                        nombre = rawIdioma.Idioma.Nombre,
+                        egresadIdiomaId = rawIdioma.EgresadoIdiomaId
                     };
 
-                    Idiomas.Add(i);
+                    idiomas.Add(idioma);
                 }
 
-                var ExperienciaLaborales = context
+                // Obteniendo las experiencias laborales del egresado
+                var rawExperienciaLaborales = context
                     .ExperienciaLaborals
-                    .Where(e => e.EgresadoId == item.EgresadoId)
+                    .Where(e => e.EgresadoId == rawEgresado.EgresadoId)
                     .ToList();
 
-                var Experiencias = new List<dynamic>();
+                var experiencias = new List<dynamic>();
 
-                foreach (var experienciaLaboral in ExperienciaLaborales)
+                foreach (var rawExperienciaLaboral in rawExperienciaLaborales)
                 {
-                    dynamic e = new
+                    dynamic experienciaLaboral = new
                     {
-                        id = experienciaLaboral.ExperienciaLaboralId,
-                        organizacion = experienciaLaboral.Organizacion,
-                        posicion = experienciaLaboral.Posicion,
-                        fechantrada = experienciaLaboral.FechaEntrada,
-                        fechaSalida = experienciaLaboral.FechaSalida
-
+                        id = rawExperienciaLaboral.ExperienciaLaboralId,
+                        organizacion = rawExperienciaLaboral.Organizacion,
+                        posicion = rawExperienciaLaboral.Posicion,
+                        fechantrada = rawExperienciaLaboral.FechaEntrada,
+                        fechaSalida = rawExperienciaLaboral.FechaSalida
                     };
 
-                    Experiencias.Add(e);
+                    experiencias.Add(experienciaLaboral);
                 }
 
-                var getEducaciones = context
+                // Obteniendo las educaciones del egresado
+                var rawEducaciones = context
                     .Educacions
-                    .Where(e => e.EgresadoId == item.EgresadoId)
+                    .Where(e => e.EgresadoId == rawEgresado.EgresadoId)
                     .Include(e => e.Formacion)
                     .ToList();
 
-                var Educaciones = new List<dynamic>();
+                var educaciones = new List<dynamic>();
 
-                foreach (var educacion in getEducaciones)
+                foreach (var rawEducacion in rawEducaciones)
                 {
-                    dynamic e = new
+                    dynamic educacion = new
                     {
-                        id = educacion.EducacionId,
-                        organizacion = educacion.Organizacion,
-                        formacionId = educacion.Formacion.FormacionId,
-                        nivel = educacion.Formacion.Nombre,
-
+                        id = rawEducacion.EducacionId,
+                        organizacion = rawEducacion.Organizacion,
+                        formacionId = rawEducacion.Formacion.FormacionId,
+                        nivel = rawEducacion.Formacion.Nombre,
                     };
 
-                    Educaciones.Add(e);
+                    educaciones.Add(educacion);
                 }
 
-                var EgresadoHabilidades = context
+                // Obteniendo las habilidades del egresado
+                var rawHabilidades = context
                     .EgresadoHabilidads
-                    .Where(eh => eh.EgresadoId == item.EgresadoId)
+                    .Where(eh => eh.EgresadoId == rawEgresado.EgresadoId)
                     .Include(eh => eh.Habilidad)
                     .ToList();
 
-                var Habilidades = new List<dynamic>();
+                var habilidades = new List<dynamic>();
 
-                foreach (var habilidad in EgresadoHabilidades)
+                foreach (var rawHabilidad in rawHabilidades)
                 {
-                    dynamic h = new
+                    dynamic habilidad = new
                     {
-                        id = habilidad.HabilidadId,
-                        valor = habilidad.Habilidad.Nombre,
-                        egresadoHabilidadId = habilidad.EgresadoHabilidadId
+                        id = rawHabilidad.HabilidadId,
+                        valor = rawHabilidad.Habilidad.Nombre,
+                        egresadoHabilidadId = rawHabilidad.EgresadoHabilidadId
                     };
 
-                    Habilidades.Add(h);
+                    habilidades.Add(habilidad);
                 }
 
-                var esDestacado = context
+                // Determinando si el egresado es destacado
+                var destacado = context
                     .EgresadoDestacados
                     .Where(d =>
-                        d.EgresadoId == item.EgresadoId &&
+                        d.EgresadoId == rawEgresado.EgresadoId &&
                         d.FechaHasta >= DateTime.Now
-                    ).Count() >= 1;
+                    ).Any();
 
                 var ciudadDelEgresado = context
                     .Egresados
-                    .Where(e => e.EgresadoId == item.EgresadoId)
+                    .Where(e => e.EgresadoId == rawEgresado.EgresadoId)
                     .Select(e => e.Participante.Direccion.LocalidadPostal.Ciudad)
                     .FirstOrDefault();
 
@@ -913,59 +912,53 @@ public class EgresadoController : Controller
                     ciudad = "Ciudad No Registrada";
                 }
 
-                var EgresadoId = item.EgresadoId;
-                var PrimerNombre = item.PrimerNombre;
-                var SegundoNombre = item.SegundoNombre;
-                var PrimerApellido = item.PrimerApellido;
-                var SegundoApellido = item.SegundoApellido;
-                var Genero = item.Genero;
-                var FechaNac = item.FechaNac;
-                var FotoPerfilUrl = item.Participante.FotoPerfilUrl;
-                var about = item.Acerca;
-                var activo = item.Estado;
-                var Nacionalidad = item.NacionalidadNavigation.Nombre;
+                var egresadoId = rawEgresado.EgresadoId;
+                var primerNombre = rawEgresado.PrimerNombre;
+                var segundoNombre = rawEgresado.SegundoNombre;
+                var primerApellido = rawEgresado.PrimerApellido;
+                var segundoApellido = rawEgresado.SegundoApellido;
+                var genero = rawEgresado.Genero;
+                var fechaNac = rawEgresado.FechaNac;
+                var fotoPerfilUrl = rawEgresado.Participante.FotoPerfilUrl;
+                var acerca = rawEgresado.Acerca;
+                var activo = rawEgresado.Estado;
+                var nacionalidad = rawEgresado.NacionalidadNavigation.Nombre;
 
-
-                dynamic Egresados = new
+                dynamic egresado = new
                 {
-                    EgresadoId = EgresadoId,
-                    PrimerNombre = PrimerNombre,
-                    SegundoNombre = SegundoNombre,
-                    PrimerApellido = PrimerApellido,
-                    SegundoApellido = SegundoApellido,
-                    DocumentoEgresados = documento,
-                    Genero = Genero,
-                    FechaNac = FechaNac,
-                    FotoPerfilUrl = FotoPerfilUrl,
-                    Acerca = about,
+                    EgresadoId = egresadoId,
+                    PrimerNombre = primerNombre,
+                    SegundoNombre = segundoNombre,
+                    PrimerApellido = primerApellido,
+                    SegundoApellido = segundoApellido,
+                    DocumentoEgresados = documentos,
+                    Genero = genero,
+                    FechaNac = fechaNac,
+                    FotoPerfilUrl = fotoPerfilUrl,
+                    Acerca = acerca,
                     Estado = activo,
-                    Destacado = esDestacado,
-                    Nacionalidad = Nacionalidad,
-                    EgresadoIdiomas = Idiomas,
-                    ExperienciaLaborals = Experiencias,
-                    Educacions = Educaciones,
-                    Contacto = contacto,
-                    Habilidades = Habilidades,
+                    Destacado = destacado,
+                    Nacionalidad = nacionalidad,
+                    EgresadoIdiomas = idiomas,
+                    ExperienciaLaborals = experiencias,
+                    Educacions = educaciones,
+                    Contacto = contactos,
+                    Habilidades = habilidades,
                     Ciudad = ciudad
                 };
 
-                Egresado.Add(Egresados);
+                egresados.Add(egresado);
             }
 
             return Results.Json(
-                data: Egresado,
+                data: egresados,
                 statusCode: StatusCodes.Status200OK
             );
         }
 
         catch (Exception ex)
         {
-            Console.Error.WriteLine(ex.ToString());
-
-            return Results.Json(
-                data: new ErrorResult(0, "Unexpected server error"),
-                statusCode: StatusCodes.Status500InternalServerError
-            );
+            return Utils.HandleError(ex);
         }
     }
 
