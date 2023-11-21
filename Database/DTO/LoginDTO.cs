@@ -1,5 +1,5 @@
 public class LoginDTO
 {
-    public required string email;
-    public required string password;
+    public required string Identificacion { get; set; }
+    public required string Password { get; set; }
 }

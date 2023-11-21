@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using PortalEgresadosAPI.Database.DTO;
-using System.Diagnostics.Contracts;
 
 namespace PortalEgresadosAPI.Controllers;
 
@@ -9,7 +8,6 @@ namespace PortalEgresadosAPI.Controllers;
 [Route("[controller]")]
 public class ContactoController : ControllerBase
 {
-
     [HttpGet("{egresadoId}")]
     /*Nombre del Metodo erroneo*/
     public IResult DeleteContactoEgresado(int egresadoId)

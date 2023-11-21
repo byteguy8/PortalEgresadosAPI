@@ -10,6 +10,7 @@ public class EgresadoPOSTDTO
     public required DateTime FechaNacimiento { get; set; }
     public string? Cedula { get; set; }
     public string? Pasaporte { get; set; }
+    public required string Email { get; set; }
     public required string Nacionalidad { get; set; }
     public required string Provincia { get; set; }
     public required string UserName { get; set; }

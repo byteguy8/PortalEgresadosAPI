@@ -30,12 +30,12 @@ public class ExperienciaLaboralPOSTDTO
             FechaEntrada = FechaEntrada,
             Mostrar = Mostrar,
             Estado = Estado,
-            FechaModificacion=DateTime.Now,
-            FechaCreacion=DateTime.Now,
-            ExperienciaLaboralId=0
+            FechaModificacion = DateTime.Now,
+            FechaCreacion = DateTime.Now,
+            ExperienciaLaboralId = 0
         };
 
 
         return experienciaLaboral;
     }
-} 
+}

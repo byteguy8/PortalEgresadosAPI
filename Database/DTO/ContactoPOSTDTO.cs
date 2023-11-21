@@ -1,4 +1,4 @@
-﻿namespace PortalEgresadosAPI.Database.DTO
+namespace PortalEgresadosAPI.Database.DTO
 {
     public class ContactoPOSTDTO
     {
@@ -19,7 +19,7 @@
             {
                 ContactoId = 0,
                 ParticipanteId = this.ParticipanteId,
-                TipoContactoId= this.TipoContactoId,
+                TipoContactoId = this.TipoContactoId,
                 Nombre = this.Nombre,
                 Estado = this.Estado,
                 Mostrar = this.Mostrar

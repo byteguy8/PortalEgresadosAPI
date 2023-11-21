@@ -1,4 +1,4 @@
-﻿public class EducacionPOSTDTO
+public class EducacionPOSTDTO
 {
     public int EgresadoId { get; set; }
     public string? Organizacion { get; set; }
