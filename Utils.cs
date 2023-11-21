@@ -337,4 +337,270 @@ public class Utils
 
         return egresado;
     }
+
+    public static TipoDocumento ObtenerTipoDocumento(
+        PortalEgresadosContext context,
+        TipoIdentidad tipo
+    )
+    {
+        string strTipoDocumento;
+
+        if (tipo == TipoIdentidad.CEDULA)
+        {
+            strTipoDocumento = "Documento de Identidad";
+        }
+        else
+        {
+            strTipoDocumento = "Pasaporte";
+        }
+
+        var rawTipoDocumento = context
+            .TipoDocumentos
+            .FirstOrDefault(t =>
+                t.Nombre == strTipoDocumento
+        )
+        ?? throw APIError(
+            "Hubo un error al procesar la solicitud. Intentelo de nuevo",
+            StatusCodes.Status500InternalServerError
+        );
+
+        return rawTipoDocumento;
+    }
+
+    public static void ValidarExistenciaDocumento(
+        PortalEgresadosContext context,
+        TipoIdentidad tipo,
+        string documento
+    )
+    {
+        var existe = context
+            .Documentos
+            .Where(d =>
+                d.DocumentoNo == documento
+            )
+            .Any();
+
+        if (existe)
+        {
+            var msg = "La cedula suministrada no esta disponible para su uso";
+
+            if (tipo == TipoIdentidad.PASAPORTE)
+            {
+                msg = "El pasaporte suministrado no esta disponible para su uso";
+            }
+
+            throw APIError(msg, StatusCodes.Status400BadRequest);
+        }
+    }
+
+    public static Documento CrearDocumento(
+        PortalEgresadosContext context,
+        int participanteId,
+        TipoIdentidad tipo,
+        string documento
+    )
+    {
+        if (documento.Length == 0)
+        {
+            throw APIError(
+                "La informacion de los documentos de identidad no puede estar vacia",
+                StatusCodes.Status400BadRequest
+            );
+        }
+
+        ValidarExistenciaDocumento(context, tipo, documento);
+
+        var rawTipoDocumento = ObtenerTipoDocumento(context, tipo);
+
+        var resultCrearDocumento = context
+            .Documentos
+            .Add(new Documento
+            {
+                DocumentoNo = documento,
+                ParticipanteId = participanteId,
+                TipoDocumentoId = rawTipoDocumento.TipoDocumentoId
+            })
+            ?? throw APIError(
+                "Hubo un error al procesar la solicitud. Intentelo de nuevo",
+                StatusCodes.Status500InternalServerError
+            );
+
+        context.SaveChanges();
+
+        return resultCrearDocumento.Entity;
+    }
+
+    public static Documento ModificarDocumento(
+        PortalEgresadosContext context,
+        int participanteId,
+        TipoIdentidad tipo,
+        string documento
+    )
+    {
+        if (documento.Length == 0)
+        {
+            throw APIError(
+                "La informacion de los documentos de identidad no puede estar vacia",
+                StatusCodes.Status400BadRequest
+            );
+        }
+
+        var rawTipoDocument = ObtenerTipoDocumento(context, tipo);
+
+        var rawDocumento = context
+            .Documentos
+            .FirstOrDefault(d =>
+                d.ParticipanteId == participanteId &&
+                d.TipoDocumentoId == rawTipoDocument.TipoDocumentoId
+            );
+
+        if (rawDocumento == null)
+        {
+            return CrearDocumento(context, participanteId, tipo, documento);
+        }
+
+        ValidarExistenciaDocumento(context, tipo, documento);
+
+        rawDocumento.DocumentoNo = documento;
+
+        context.SaveChanges();
+
+        return rawDocumento;
+    }
+
+    public static void EliminarDocumento(
+        PortalEgresadosContext context,
+        int ParticipanteId,
+        TipoIdentidad tipo
+    )
+    {
+        var rawTipoDocumento = ObtenerTipoDocumento(context, tipo);
+
+        var rawDocumento = context
+            .Documentos
+            .FirstOrDefault(d =>
+                d.ParticipanteId == ParticipanteId &&
+                d.TipoDocumentoId == rawTipoDocumento.TipoDocumentoId
+            );
+
+        if (rawDocumento != null)
+        {
+            context
+                .Documentos
+                .Remove(rawDocumento);
+
+            context.SaveChanges();
+        }
+    }
+
+    public static LocalidadPostal ObtenerMunicipio(
+        PortalEgresadosContext context,
+        string provincia
+    )
+    {
+        // Verificando si existe la provincia.
+        var rawProvincia = context
+            .Ciudads
+            .FirstOrDefault(c =>
+                c.Nombre == provincia
+            )
+            ?? throw APIError(
+                $"No existe la provincia con el nombre '{provincia}'",
+                StatusCodes.Status400BadRequest
+            );
+
+        // Verificando si existe el municipio
+        var rawMunicipio = context
+            .LocalidadPostals
+            .FirstOrDefault(m =>
+                m.CiudadId == rawProvincia.CiudadId
+            )
+            ?? throw APIError(
+                $"No se pudo obtener informacion del municipio",
+                StatusCodes.Status500InternalServerError
+            );
+
+        return rawMunicipio;
+    }
+
+    public static Direccion CrearProvincia(
+        PortalEgresadosContext context,
+        string provincia
+    )
+    {
+        var rawMunicipio = ObtenerMunicipio(context, provincia);
+
+        var resultCrearDireccion = context
+            .Direccions
+            .Add(new Direccion
+            {
+                LocalidadPostalId = rawMunicipio.LocalidadPostalId,
+                DireccionPrincipal = ""
+            })
+            ?? throw APIError(
+                "Hubo un error al procesar la solicitud. Intentelo de nuevo",
+                StatusCodes.Status500InternalServerError
+            );
+
+        context.SaveChanges();
+
+        return resultCrearDireccion.Entity;
+    }
+
+    public static Usuario CrearUsuario(
+        PortalEgresadosContext context,
+        string rol,
+        string username,
+        string password
+    )
+    {
+        // Verificando si existe el rol.
+        var rawRol = context
+            .Rols
+            .FirstOrDefault(r =>
+                r.Nombre.ToUpper() == rol.ToUpper()
+            )
+            ?? throw APIError(
+                $"No existe el rol '{rol}'",
+                StatusCodes.Status400BadRequest
+            );
+
+        // Verificando si ya existe un usuario con el mismo nombre.
+        var existeUsuario = context
+            .Usuarios
+            .Where(u =>
+                EF.Functions.Like(u.UserName, $"%{username}%")
+            )
+            .Any();
+
+        if (existeUsuario)
+        {
+            throw APIError(
+                $"El nombre usuario suministrado no esta disponible",
+                StatusCodes.Status400BadRequest
+            );
+        }
+
+        byte[] byteSalt = GenerateSalt();
+        byte[] byteHashPassword = HashPasswordWithSalt(password, byteSalt);
+
+        // Creando el usuario
+        var resultCrearUsuario = context
+            .Usuarios
+            .Add(new Usuario
+            {
+                RolId = rawRol.RolId,
+                UserName = username,
+                Password = Convert.ToHexString(byteHashPassword),
+                Salt = Convert.ToHexString(byteSalt)
+            })
+            ?? throw APIError(
+                "Hubo un error al procesar la solicitud. Intentelo de nuevo",
+                StatusCodes.Status500InternalServerError
+            );
+
+        context.SaveChanges();
+
+        return resultCrearUsuario.Entity;
+    }
 }

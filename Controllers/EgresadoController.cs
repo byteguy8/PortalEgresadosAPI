@@ -11,278 +11,6 @@ namespace PortalEgresadosAPI.Controllers;
 [Route("[controller]")]
 public class EgresadoController : Controller
 {
-    private enum TipoIdentidad
-    {
-        CEDULA,
-        PASAPORTE
-    }
-
-    private TipoDocumento ObtenerTipoDocumento(
-        PortalEgresadosContext context,
-        TipoIdentidad tipo
-    )
-    {
-        string strTipoDocumento;
-
-        if (tipo == TipoIdentidad.CEDULA)
-        {
-            strTipoDocumento = "Documento de Identidad";
-        }
-        else
-        {
-            strTipoDocumento = "Pasaporte";
-        }
-
-        var rawTipoDocumento = context
-            .TipoDocumentos
-            .FirstOrDefault(t =>
-                t.Nombre == strTipoDocumento
-        )
-        ?? throw Utils.APIError(
-            "Hubo un error al procesar la solicitud. Intentelo de nuevo",
-            StatusCodes.Status500InternalServerError
-        );
-
-        return rawTipoDocumento;
-    }
-
-    private void ValidarExistenciaDocumento(
-        PortalEgresadosContext context,
-        TipoIdentidad tipo,
-        string documento
-    )
-    {
-        var existe = context
-            .Documentos
-            .Where(d =>
-                d.DocumentoNo == documento
-            )
-            .Any();
-
-        if (existe)
-        {
-            var msg = "La cedula suministrada no esta disponible para su uso";
-
-            if (tipo == TipoIdentidad.PASAPORTE)
-            {
-                msg = "El pasaporte suministrado no esta disponible para su uso";
-            }
-
-            throw Utils.APIError(msg, StatusCodes.Status400BadRequest);
-        }
-    }
-
-    private Documento CrearDocumento(
-        PortalEgresadosContext context,
-        int participanteId,
-        TipoIdentidad tipo,
-        string documento
-    )
-    {
-        if (documento.Length == 0)
-        {
-            throw Utils.APIError(
-                "La informacion de los documentos de identidad no puede estar vacia",
-                StatusCodes.Status400BadRequest
-            );
-        }
-
-        ValidarExistenciaDocumento(context, tipo, documento);
-
-        var rawTipoDocumento = ObtenerTipoDocumento(context, tipo);
-
-        var resultCrearDocumento = context
-            .Documentos
-            .Add(new Documento
-            {
-                DocumentoNo = documento,
-                ParticipanteId = participanteId,
-                TipoDocumentoId = rawTipoDocumento.TipoDocumentoId
-            })
-            ?? throw Utils.APIError(
-                "Hubo un error al procesar la solicitud. Intentelo de nuevo",
-                StatusCodes.Status500InternalServerError
-            );
-
-        context.SaveChanges();
-
-        return resultCrearDocumento.Entity;
-    }
-
-    private Documento ModificarDocumento(
-        PortalEgresadosContext context,
-        int participanteId,
-        TipoIdentidad tipo,
-        string documento
-    )
-    {
-        if (documento.Length == 0)
-        {
-            throw Utils.APIError(
-                "La informacion de los documentos de identidad no puede estar vacia",
-                StatusCodes.Status400BadRequest
-            );
-        }
-
-        var rawTipoDocument = ObtenerTipoDocumento(context, tipo);
-
-        var rawDocumento = context
-            .Documentos
-            .FirstOrDefault(d =>
-                d.ParticipanteId == participanteId &&
-                d.TipoDocumentoId == rawTipoDocument.TipoDocumentoId
-            );
-
-        if (rawDocumento == null)
-        {
-            return CrearDocumento(context, participanteId, tipo, documento);
-        }
-
-        ValidarExistenciaDocumento(context, tipo, documento);
-
-        rawDocumento.DocumentoNo = documento;
-
-        context.SaveChanges();
-
-        return rawDocumento;
-    }
-
-    private void EliminarDocumento(
-        PortalEgresadosContext context,
-        int ParticipanteId,
-        TipoIdentidad tipo
-    )
-    {
-        var rawTipoDocumento = ObtenerTipoDocumento(context, tipo);
-
-        var rawDocumento = context
-            .Documentos
-            .FirstOrDefault(d =>
-                d.ParticipanteId == ParticipanteId &&
-                d.TipoDocumentoId == rawTipoDocumento.TipoDocumentoId
-            );
-
-        if (rawDocumento != null)
-        {
-            context
-                .Documentos
-                .Remove(rawDocumento);
-
-            context.SaveChanges();
-        }
-    }
-
-    private LocalidadPostal ObtenerMunicipio(
-        PortalEgresadosContext context,
-        string provincia
-    )
-    {
-        // Verificando si existe la provincia.
-        var rawProvincia = context
-            .Ciudads
-            .FirstOrDefault(c =>
-                c.Nombre == provincia
-            )
-            ?? throw Utils.APIError(
-                $"No existe la provincia con el nombre '{provincia}'",
-                StatusCodes.Status400BadRequest
-            );
-
-        // Verificando si existe el municipio
-        var rawMunicipio = context
-            .LocalidadPostals
-            .FirstOrDefault(m =>
-                m.CiudadId == rawProvincia.CiudadId
-            )
-            ?? throw Utils.APIError(
-                $"No se pudo obtener informacion del municipio",
-                StatusCodes.Status500InternalServerError
-            );
-
-        return rawMunicipio;
-    }
-
-    private Direccion CrearProvincia(
-        PortalEgresadosContext context,
-        string provincia
-    )
-    {
-        var rawMunicipio = ObtenerMunicipio(context, provincia);
-
-        var resultCrearDireccion = context
-            .Direccions
-            .Add(new Direccion
-            {
-                LocalidadPostalId = rawMunicipio.LocalidadPostalId,
-                DireccionPrincipal = ""
-            })
-            ?? throw Utils.APIError(
-                "Hubo un error al procesar la solicitud. Intentelo de nuevo",
-                StatusCodes.Status500InternalServerError
-            );
-
-        context.SaveChanges();
-
-        return resultCrearDireccion.Entity;
-    }
-
-    private Usuario CrearUsuario(
-        PortalEgresadosContext context,
-        string rol,
-        string username,
-        string password
-    )
-    {
-        // Verificando si existe el rol.
-        var rawRol = context
-            .Rols
-            .FirstOrDefault(r =>
-                r.Nombre.ToUpper() == rol.ToUpper()
-            )
-            ?? throw Utils.APIError(
-                $"No existe el rol '{rol}'",
-                StatusCodes.Status400BadRequest
-            );
-
-        // Verificando si ya existe un usuario con el mismo nombre.
-        var existeUsuario = context
-            .Usuarios
-            .Where(u =>
-                EF.Functions.Like(u.UserName, $"%{username}%")
-            )
-            .Any();
-
-        if (existeUsuario)
-        {
-            throw Utils.APIError(
-                $"El nombre usuario suministrado no esta disponible",
-                StatusCodes.Status400BadRequest
-            );
-        }
-
-        byte[] byteSalt = Utils.GenerateSalt();
-        byte[] byteHashPassword = Utils.HashPasswordWithSalt(password, byteSalt);
-
-        // Creando el usuario
-        var resultCrearUsuario = context
-            .Usuarios
-            .Add(new Usuario
-            {
-                RolId = rawRol.RolId,
-                UserName = username,
-                Password = Convert.ToHexString(byteHashPassword),
-                Salt = Convert.ToHexString(byteSalt)
-            })
-            ?? throw Utils.APIError(
-                "Hubo un error al procesar la solicitud. Intentelo de nuevo",
-                StatusCodes.Status500InternalServerError
-            );
-
-        context.SaveChanges();
-
-        return resultCrearUsuario.Entity;
-    }
-
     [Authorize]
     [HttpPut("FotoPerfil/{egresadoId}")]
     public async Task<IResult> SubirFotoPerfil(int egresadoId, [FromForm] IFormFile foto)
@@ -542,14 +270,14 @@ public class EgresadoController : Controller
             }
 
             // Creado usuario
-            var rawUsuario = CrearUsuario(
+            var rawUsuario = Utils.CrearUsuario(
                 context,
                 egresado.Rol,
                 egresado.UserName,
                 egresado.Password
             );
 
-            var rawDireccion = CrearProvincia(context, egresado.Provincia);
+            var rawDireccion = Utils.CrearProvincia(context, egresado.Provincia);
 
             // Creando Participante
             var resultCrearParticipante = context
@@ -573,7 +301,7 @@ public class EgresadoController : Controller
             // Creando documentos
             if (egresado.Cedula != null)
             {
-                CrearDocumento(
+                Utils.CrearDocumento(
                     context,
                     rawParticipante.ParticipanteId,
                     TipoIdentidad.CEDULA,
@@ -583,7 +311,7 @@ public class EgresadoController : Controller
 
             if (egresado.Pasaporte != null)
             {
-                CrearDocumento(
+                Utils.CrearDocumento(
                     context,
                     rawParticipante.ParticipanteId,
                     TipoIdentidad.PASAPORTE,
@@ -693,7 +421,7 @@ public class EgresadoController : Controller
             {
                 if (egresado.Cedula.Length > 0)
                 {
-                    ModificarDocumento(
+                    Utils.ModificarDocumento(
                         context,
                         rawParticipante.ParticipanteId,
                         TipoIdentidad.CEDULA,
@@ -702,7 +430,7 @@ public class EgresadoController : Controller
                 }
                 else
                 {
-                    EliminarDocumento(
+                    Utils.EliminarDocumento(
                         context,
                         rawParticipante.ParticipanteId,
                         TipoIdentidad.CEDULA
@@ -714,7 +442,7 @@ public class EgresadoController : Controller
             {
                 if (egresado.Pasaporte.Length > 0)
                 {
-                    ModificarDocumento(
+                    Utils.ModificarDocumento(
                         context,
                         rawParticipante.ParticipanteId,
                         TipoIdentidad.PASAPORTE,
@@ -723,7 +451,7 @@ public class EgresadoController : Controller
                 }
                 else
                 {
-                    EliminarDocumento(
+                    Utils.EliminarDocumento(
                         context,
                         rawParticipante.ParticipanteId,
                         TipoIdentidad.PASAPORTE
@@ -731,7 +459,7 @@ public class EgresadoController : Controller
                 }
             }
 
-            var rawMunicipio = ObtenerMunicipio(context, egresado.Provincia);
+            var rawMunicipio = Utils.ObtenerMunicipio(context, egresado.Provincia);
 
             rawParticipante
                 .Direccion
