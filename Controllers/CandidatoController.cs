@@ -8,7 +8,7 @@ namespace PortalEgresadosAPI.Controllers;
 public class CandidatoController : ControllerBase
 {
     [HttpGet("{EgresadoId}")]
-    public IResult EsCandidato([FromQuery] int egresadoId)
+    public IResult EsCandidato(int egresadoId)
     {
         PortalEgresadosContext? context = null;
 
