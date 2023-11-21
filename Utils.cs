@@ -109,7 +109,7 @@ public class Utils
         return rawEgresado.EgresadoId == egresadoId;
     }
 
-    public static dynamic ObtenerInfEgresados(PortalEgresadosContext context, Egresado rawEgresado)
+    public static dynamic ObtenerInfEgresado(PortalEgresadosContext context, Egresado rawEgresado)
     {
         // Obteniendo los documentos del egresado
         var rawDocumentos = context

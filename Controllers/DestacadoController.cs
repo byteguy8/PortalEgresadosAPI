@@ -34,7 +34,7 @@ public class DestacadoController : ControllerBase
             foreach (var rawDestacado in rawDestacados)
             {
                 var rawEgresado = rawDestacado.Egresado;
-                egresados.Add(Utils.ObtenerInfEgresados(context, rawEgresado));
+                egresados.Add(Utils.ObtenerInfEgresado(context, rawEgresado));
             }
 
             return Results.Ok(egresados);
