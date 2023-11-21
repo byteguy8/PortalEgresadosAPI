@@ -35,10 +35,10 @@ public class EgresadoController : Controller
                 .FirstOrDefaultAsync(e =>
                     e.EgresadoId == egresadoId
                 )
-                ?? throw Utils.APIError(
-                    "No existen registros para el egresado suministrado",
-                    StatusCodes.Status400BadRequest
-                );
+            ?? throw Utils.APIError(
+                "No existen registros para el egresado suministrado",
+                StatusCodes.Status400BadRequest
+            );
 
             if (foto == null)
             {
@@ -234,10 +234,10 @@ public class EgresadoController : Controller
                 .FirstOrDefault(n =>
                     n.Nombre == egresado.Nacionalidad
                 )
-                ?? throw Utils.APIError(
-                    $"No existe la nacionalidad con el nombre '{egresado.Nacionalidad}'",
-                    StatusCodes.Status400BadRequest
-                );
+            ?? throw Utils.APIError(
+                $"No existe la nacionalidad con el nombre '{egresado.Nacionalidad}'",
+                StatusCodes.Status400BadRequest
+            );
 
             // Verificando si existe el tipo de participante.
             var rawTipoParticipante = context
@@ -245,10 +245,10 @@ public class EgresadoController : Controller
                 .FirstOrDefault(t =>
                     t.Nombre == egresado.TipoParticipante
                 )
-                ?? throw Utils.APIError(
-                    $"No existe el tipo de participante '{egresado.TipoParticipante}'",
-                    StatusCodes.Status400BadRequest
-                );
+            ?? throw Utils.APIError(
+                $"No existe el tipo de participante '{egresado.TipoParticipante}'",
+                StatusCodes.Status400BadRequest
+            );
 
             // Verificando si existe alguna o ambas matriculas
             var existenMatriculas = context
@@ -289,10 +289,10 @@ public class EgresadoController : Controller
                     EsEgresado = true,
                     DireccionId = rawDireccion.DireccionId
                 })
-                ?? throw Utils.APIError(
-                    "Hubo un error al procesar la solicitud. Intentelo de nuevo",
-                    StatusCodes.Status500InternalServerError
-                );
+            ?? throw Utils.APIError(
+                "Hubo un error al procesar la solicitud. Intentelo de nuevo",
+                StatusCodes.Status500InternalServerError
+            );
 
             context.SaveChanges();
 
@@ -337,10 +337,10 @@ public class EgresadoController : Controller
             var resultCrearEgresado = context
                 .Egresados
                 .Add(nuevoEgresado)
-                ?? throw Utils.APIError(
-                    "Hubo un error al procesar la solicitud. Intentelo de nuevo",
-                    StatusCodes.Status500InternalServerError
-                );
+            ?? throw Utils.APIError(
+                "Hubo un error al procesar la solicitud. Intentelo de nuevo",
+                StatusCodes.Status500InternalServerError
+            );
 
             context.SaveChanges();
 
