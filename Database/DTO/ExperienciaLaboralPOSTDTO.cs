@@ -14,10 +14,6 @@ public class ExperienciaLaboralPOSTDTO
 
     public string? Acerca { get; set; }
 
-    public bool? Mostrar { get; set; }
-
-    public bool? Estado { get; set; }
-
     public ExperienciaLaboral Convert()
     {
         ExperienciaLaboral experienciaLaboral = new ExperienciaLaboral
@@ -28,13 +24,10 @@ public class ExperienciaLaboralPOSTDTO
             FechaSalida = FechaSalida,
             Acerca = Acerca,
             FechaEntrada = FechaEntrada,
-            Mostrar = Mostrar,
-            Estado = Estado,
             FechaModificacion = DateTime.Now,
             FechaCreacion = DateTime.Now,
             ExperienciaLaboralId = 0
         };
-
 
         return experienciaLaboral;
     }

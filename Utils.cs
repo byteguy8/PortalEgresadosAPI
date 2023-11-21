@@ -603,4 +603,20 @@ public class Utils
 
         return resultCrearUsuario.Entity;
     }
+
+    public static List<string> ObtenerNiveles(PortalEgresadosContext context)
+    {
+        var rawNiveles = context
+            .Nivels
+            .ToList();
+
+        var niveles = new List<string>();
+
+        foreach (var rawNivel in rawNiveles)
+        {
+            niveles.Add(rawNivel.Nombre);
+        }
+
+        return niveles;
+    }
 }

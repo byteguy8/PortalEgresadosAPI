@@ -13,102 +13,90 @@ public class ExperienciaLaboralController : ControllerBase
     [HttpGet("{egresadoId}")]
     public async Task<IResult> ExperienciaLaboralEgresado(int egresadoId)
     {
-
-        PortalEgresadosContext? context;
+        PortalEgresadosContext? context = null;
 
         try
         {
             context = new PortalEgresadosContext();
 
             var ExperienciaLaborales = await context
-                    .ExperienciaLaborals
-                    .Where(e => e.EgresadoId == egresadoId)
-                    .ToListAsync();
+                .ExperienciaLaborals
+                .Where(e => e.EgresadoId == egresadoId)
+                .ToListAsync();
 
-            return Results.Json(
-                data: ExperienciaLaborales,
-                statusCode: StatusCodes.Status200OK
-            );
-
+            return Results.Ok(ExperienciaLaborales);
         }
         catch (Exception ex)
         {
-            Console.Error.WriteLine(ex.Message);
-
-            return Results.Json(
-                data: new ErrorResult(0, "Unexpected server error"),
-                statusCode: StatusCodes.Status500InternalServerError
-            );
-
+            return Utils.HandleError(ex);
         }
-
-
+        finally
+        {
+            context?.Dispose();
+        }
     }
 
     [Authorize]
     [HttpPost]
     public async Task<IResult> CreateExperienciaLaboralEgresado([FromBody] ExperienciaLaboralPOSTDTO experienciaLaboral)
     {
+        PortalEgresadosContext? context = null;
+
         try
         {
-            PortalEgresadosContext context = new PortalEgresadosContext();
+            context = new PortalEgresadosContext();
 
             ExperienciaLaboral experienciaLaboralToInsert = experienciaLaboral.Convert();
 
-            await context.ExperienciaLaborals.AddAsync(experienciaLaboralToInsert);
+            await context
+                .ExperienciaLaborals
+                .AddAsync(experienciaLaboralToInsert);
 
             await context.SaveChangesAsync();
 
-            return Results.Json(
-                  data: experienciaLaboralToInsert.ExperienciaLaboralId,
-                  statusCode: StatusCodes.Status200OK
-              );
+            return Results.Ok(experienciaLaboralToInsert.ExperienciaLaboralId);
         }
         catch (Exception ex)
         {
-            Console.Error.WriteLine(ex.Message);
-
-            return Results.Json(
-                data: new ErrorResult(0, "Unexpected server error"),
-                statusCode: StatusCodes.Status500InternalServerError
-            );
-
+            return Utils.HandleError(ex);
         }
-
-
+        finally
+        {
+            context?.Dispose();
+        }
     }
 
     [Authorize]
     [HttpDelete]
     public async Task<IResult> DeleteExperienciaLaboralEgresado([FromQuery] int id)
     {
+        PortalEgresadosContext? context = null;
 
         try
         {
-            PortalEgresadosContext context = new PortalEgresadosContext();
+            context = new PortalEgresadosContext();
 
-            ExperienciaLaboral experiencia =
-                await context.ExperienciaLaborals
-                .FirstOrDefaultAsync(experienciaLaboral => experienciaLaboral.ExperienciaLaboralId == id) ?? new();
+            ExperienciaLaboral experiencia = await context.ExperienciaLaborals
+                .FirstOrDefaultAsync(e =>
+                    e.ExperienciaLaboralId == id
+                )
+            ?? new();
 
-            context.ExperienciaLaborals.Remove(experiencia);
+            context
+                .ExperienciaLaborals
+                .Remove(experiencia);
 
             await context.SaveChangesAsync();
 
-            return Results.Json(
-                  data: true,
-                  statusCode: StatusCodes.Status200OK
-              );
+            return Results.Ok(true);
         }
         catch (Exception ex)
         {
-
-            Console.Error.WriteLine(ex.Message);
-
-            return Results.Json(
-                data: new ErrorResult(0, "Unexpected server error"),
-                statusCode: StatusCodes.Status500InternalServerError
-            );
+            return Utils.HandleError(ex);
+        }
+        finally
+        {
+            context?.Dispose();
         }
     }
 }
