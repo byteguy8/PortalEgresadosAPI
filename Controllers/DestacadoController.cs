@@ -24,7 +24,6 @@ public class DestacadoController : ControllerBase
                 .OrderBy(d => d.Egresado.PrimerNombre)
                 .ToList()
             ?? throw Utils.APIError(
-                0,
                 "Hubo un error al procesar la solicitud. Intentelo de nuevo",
                 StatusCodes.Status500InternalServerError
             );

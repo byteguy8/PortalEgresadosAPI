@@ -57,8 +57,6 @@ public class EducacionController : ControllerBase
             );
 
         }
-
-
     }
 
     [HttpPost]

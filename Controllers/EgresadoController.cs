@@ -39,7 +39,6 @@ public class EgresadoController : Controller
                 t.Nombre == strTipoDocumento
         )
         ?? throw Utils.APIError(
-            0,
             "Hubo un error al procesar la solicitud. Intentelo de nuevo",
             StatusCodes.Status500InternalServerError
         );
@@ -69,7 +68,7 @@ public class EgresadoController : Controller
                 msg = "El pasaporte suministrado no esta disponible para su uso";
             }
 
-            throw Utils.APIError(0, msg, StatusCodes.Status400BadRequest);
+            throw Utils.APIError(msg, StatusCodes.Status400BadRequest);
         }
     }
 
@@ -83,7 +82,6 @@ public class EgresadoController : Controller
         if (documento.Length == 0)
         {
             throw Utils.APIError(
-                0,
                 "La informacion de los documentos de identidad no puede estar vacia",
                 StatusCodes.Status400BadRequest
             );
@@ -102,7 +100,6 @@ public class EgresadoController : Controller
                 TipoDocumentoId = rawTipoDocumento.TipoDocumentoId
             })
             ?? throw Utils.APIError(
-                0,
                 "Hubo un error al procesar la solicitud. Intentelo de nuevo",
                 StatusCodes.Status500InternalServerError
             );
@@ -122,7 +119,6 @@ public class EgresadoController : Controller
         if (documento.Length == 0)
         {
             throw Utils.APIError(
-                0,
                 "La informacion de los documentos de identidad no puede estar vacia",
                 StatusCodes.Status400BadRequest
             );
@@ -188,7 +184,6 @@ public class EgresadoController : Controller
                 c.Nombre == provincia
             )
             ?? throw Utils.APIError(
-                0,
                 $"No existe la provincia con el nombre '{provincia}'",
                 StatusCodes.Status400BadRequest
             );
@@ -200,7 +195,6 @@ public class EgresadoController : Controller
                 m.CiudadId == rawProvincia.CiudadId
             )
             ?? throw Utils.APIError(
-                0,
                 $"No se pudo obtener informacion del municipio",
                 StatusCodes.Status500InternalServerError
             );
@@ -223,7 +217,6 @@ public class EgresadoController : Controller
                 DireccionPrincipal = ""
             })
             ?? throw Utils.APIError(
-                0,
                 "Hubo un error al procesar la solicitud. Intentelo de nuevo",
                 StatusCodes.Status500InternalServerError
             );
@@ -247,7 +240,6 @@ public class EgresadoController : Controller
                 r.Nombre.ToUpper() == rol.ToUpper()
             )
             ?? throw Utils.APIError(
-                0,
                 $"No existe el rol '{rol}'",
                 StatusCodes.Status400BadRequest
             );
@@ -263,7 +255,6 @@ public class EgresadoController : Controller
         if (existeUsuario)
         {
             throw Utils.APIError(
-                0,
                 $"El nombre usuario suministrado no esta disponible",
                 StatusCodes.Status400BadRequest
             );
@@ -283,7 +274,6 @@ public class EgresadoController : Controller
                 Salt = Convert.ToHexString(byteSalt)
             })
             ?? throw Utils.APIError(
-                0,
                 "Hubo un error al procesar la solicitud. Intentelo de nuevo",
                 StatusCodes.Status500InternalServerError
             );
@@ -306,7 +296,6 @@ public class EgresadoController : Controller
             if (!Utils.IsTokenAuthorizedEmail(context, egresadoId, User))
             {
                 throw Utils.APIError(
-                    0,
                     "Sin autorizacion para realizar la accion",
                     StatusCodes.Status400BadRequest
                 );
@@ -319,7 +308,6 @@ public class EgresadoController : Controller
                     e.EgresadoId == egresadoId
                 )
                 ?? throw Utils.APIError(
-                    0,
                     "No existen registros para el egresado suministrado",
                     StatusCodes.Status400BadRequest
                 );
@@ -327,7 +315,6 @@ public class EgresadoController : Controller
             if (foto == null)
             {
                 throw Utils.APIError(
-                    0,
                     "No se suministro los binarios de la foto de perfil",
                     StatusCodes.Status400BadRequest
                 );
@@ -358,7 +345,6 @@ public class EgresadoController : Controller
             var uploadResult = await cloudinary.UploadAsync(uploadParameters);
 
             var urlFoto = uploadResult.Url ?? throw Utils.APIError(
-                0,
                 "Hubo un error al procesar la solicitud. Intentelo de nuevo",
                 StatusCodes.Status400BadRequest
             );
@@ -398,7 +384,6 @@ public class EgresadoController : Controller
                 .OrderBy(b => b.PrimerNombre)
                 .FirstOrDefault()
             ?? throw Utils.APIError(
-                0,
                 "No existen registros para el egresado suministrado",
                 StatusCodes.Status400BadRequest
             );
@@ -432,7 +417,6 @@ public class EgresadoController : Controller
                 .Take(limit)
                 .ToList()
             ?? throw Utils.APIError(
-                0,
                 "Hubo un error al procesar la solicitud. Intentelo de nuevo",
                 StatusCodes.Status500InternalServerError
             );
@@ -469,7 +453,6 @@ public class EgresadoController : Controller
             if (!Utils.isTokenAdministrator(User))
             {
                 throw Utils.APIError(
-                    0,
                     "Sin autorizacion para realizar la accion",
                     StatusCodes.Status400BadRequest
                 );
@@ -479,7 +462,6 @@ public class EgresadoController : Controller
             if (egresado.Genero != "M" && egresado.Genero != "F")
             {
                 throw Utils.APIError(
-                    0,
                     $"Valor para genero incorrecto. Debe ser M (masculino) o F (femenino).",
                     StatusCodes.Status400BadRequest
                 );
@@ -489,7 +471,6 @@ public class EgresadoController : Controller
             if (egresado.Pasaporte == null && egresado.Cedula == null)
             {
                 throw Utils.APIError(
-                    0,
                     "Se espera informacion de la cedula y/o pasaporte, pero ninguno de los dos esta",
                     StatusCodes.Status400BadRequest
                 );
@@ -500,7 +481,6 @@ public class EgresadoController : Controller
             egresado.MatriculaEgresado.Length > 11 || egresado.MatriculaGrado.Length > 11)
             {
                 throw Utils.APIError(
-                    0,
                     "Ambas matriculas deben tener una longitud mayor que 0 e igual o menor que 11",
                     StatusCodes.Status400BadRequest
                 );
@@ -515,7 +495,6 @@ public class EgresadoController : Controller
             if (existeEmail)
             {
                 throw Utils.APIError(
-                    0,
                     $"El email '${egresado.Email}' no se encuentra disponible",
                     StatusCodes.Status400BadRequest
                 );
@@ -528,7 +507,6 @@ public class EgresadoController : Controller
                     n.Nombre == egresado.Nacionalidad
                 )
                 ?? throw Utils.APIError(
-                    0,
                     $"No existe la nacionalidad con el nombre '{egresado.Nacionalidad}'",
                     StatusCodes.Status400BadRequest
                 );
@@ -540,7 +518,6 @@ public class EgresadoController : Controller
                     t.Nombre == egresado.TipoParticipante
                 )
                 ?? throw Utils.APIError(
-                    0,
                     $"No existe el tipo de participante '{egresado.TipoParticipante}'",
                     StatusCodes.Status400BadRequest
                 );
@@ -559,7 +536,6 @@ public class EgresadoController : Controller
             if (existenMatriculas)
             {
                 throw Utils.APIError(
-                    0,
                     $"Ya existe un egresado registrado con alguna de las matriculas suministradas",
                     StatusCodes.Status400BadRequest
                 );
@@ -586,7 +562,6 @@ public class EgresadoController : Controller
                     DireccionId = rawDireccion.DireccionId
                 })
                 ?? throw Utils.APIError(
-                    0,
                     "Hubo un error al procesar la solicitud. Intentelo de nuevo",
                     StatusCodes.Status500InternalServerError
                 );
@@ -635,7 +610,6 @@ public class EgresadoController : Controller
                 .Egresados
                 .Add(nuevoEgresado)
                 ?? throw Utils.APIError(
-                    0,
                     "Hubo un error al procesar la solicitud. Intentelo de nuevo",
                     StatusCodes.Status500InternalServerError
                 );
@@ -673,7 +647,6 @@ public class EgresadoController : Controller
             if (!Utils.IsTokenAuthorizedEmail(context, egresado.Id, User))
             {
                 throw Utils.APIError(
-                    0,
                     "Sin autorizacion para realizar la accion",
                     StatusCodes.Status400BadRequest
                 );
@@ -682,7 +655,6 @@ public class EgresadoController : Controller
             if (egresado.Genero != "M" && egresado.Genero != "F")
             {
                 throw Utils.APIError(
-                    0,
                     "Valor para genero incorrecto. Debe ser M (masculino) o F (femenino).",
                     StatusCodes.Status400BadRequest
                 );
@@ -691,7 +663,6 @@ public class EgresadoController : Controller
             if (egresado.Pasaporte == null && egresado.Cedula == null)
             {
                 throw Utils.APIError(
-                    0,
                     "Se espera informacion de la cedula y/o pasaporte, pero ninguno de los dos esta",
                     StatusCodes.Status400BadRequest
                 );
@@ -701,7 +672,6 @@ public class EgresadoController : Controller
             egresado.Pasaporte != null && egresado.Pasaporte.Length == 0)
             {
                 throw Utils.APIError(
-                    0,
                     "Se espera informacion de la cedula y/o pasaporte, pero ninguno de los dos esta",
                     StatusCodes.Status400BadRequest
                 );
@@ -711,15 +681,11 @@ public class EgresadoController : Controller
                 .Egresados
                 .Include(e => e.Participante)
                 .ThenInclude(p => p.Direccion)
-                .FirstOrDefault(e => e.EgresadoId == egresado.Id);
-
-            if (rawEgresado == null)
-            {
-                return Results.Json(
-                    data: "No existen registros para el egresado suministrado",
-                    statusCode: StatusCodes.Status500InternalServerError
-                );
-            }
+                .FirstOrDefault(e => e.EgresadoId == egresado.Id)
+            ?? throw Utils.APIError(
+                "No existen registros para el egresado suministrado",
+                StatusCodes.Status400BadRequest
+            );
 
             var rawParticipante = rawEgresado.Participante;
 

@@ -2,7 +2,6 @@ using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.OpenApi.Any;
 using PortalEgresadosAPI;
 
 public class Utils
@@ -17,20 +16,20 @@ public class Utils
         if (ex is APIException error)
         {
             return Results.Json(
-                data: new ErrorMsg(error.Code, error.Message),
+                data: new ErrorMsg(error.Message),
                 statusCode: error.Status
             );
         }
 
         return Results.Json(
-            data: new ErrorMsg(0, "Hubo un error al procesar la solicitud. Intentelo de nuevo"),
+            data: new ErrorMsg("Hubo un error al procesar la solicitud. Intentelo de nuevo"),
             statusCode: StatusCodes.Status500InternalServerError
         );
     }
 
-    public static APIException APIError(int code, string message, int status)
+    public static APIException APIError(string message, int status)
     {
-        return new APIException(code, status, message);
+        return new APIException(status, message);
     }
 
     public static byte[] GenerateSalt(int size)
@@ -71,7 +70,6 @@ public class Utils
     {
         var claimRol = claims.FindFirst("email")
             ?? throw APIError(
-                0,
                 "Error inesperado al procesar identificacion",
                 StatusCodes.Status400BadRequest
             );
@@ -83,7 +81,6 @@ public class Utils
     {
         var claimEmail = claims.FindFirst("identificacion")
             ?? throw APIError(
-                0,
                 "Error inesperado al procesar identificacion",
                 StatusCodes.Status400BadRequest
             );
@@ -94,7 +91,6 @@ public class Utils
             .ThenInclude(p => p.Egresado)
             .FirstOrDefault(c => c.Nombre == claimEmail.Value)
             ?? throw APIError(
-                0,
                 "No se pudo verificar la informacion del egresado",
                 StatusCodes.Status400BadRequest
             );
@@ -102,7 +98,6 @@ public class Utils
         var rawParticipante = rawContacto.Participante;
         var rawEgresado = rawParticipante.Egresado
             ?? throw APIError(
-                0,
                 "No se pudo verificar la informacion del egresado",
                 StatusCodes.Status400BadRequest
             );
@@ -330,7 +325,7 @@ public class Utils
             FotoPerfilUrl = fotoPerfilUrl,
             Acerca = acerca,
             Estado = activo,
-            Destacado = (object) (fullDestacado ? infDestacado : destacado),
+            Destacado = (object)(fullDestacado ? infDestacado : destacado),
             Nacionalidad = nacionalidad,
             EgresadoIdiomas = idiomas,
             ExperienciaLaborals = experiencias,

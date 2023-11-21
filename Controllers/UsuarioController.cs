@@ -28,7 +28,6 @@ public class UsuarioController : Controller
                 .ThenInclude(u => u.Rol)
                 .FirstOrDefault(e => e.Nombre == login.Identificacion)
             ?? throw Utils.APIError(
-                0,
                 "No existe informacion para la combinacion de email y password suministrados",
                 StatusCodes.Status400BadRequest
             );
@@ -38,7 +37,6 @@ public class UsuarioController : Controller
 
             var salt = rawUsuario.Salt
             ?? throw Utils.APIError(
-                0,
                 "Hubo un error al procesar la solicitud. Intentelo de nuevo",
                 StatusCodes.Status500InternalServerError
             );
@@ -50,7 +48,6 @@ public class UsuarioController : Controller
             if (hexPassword != rawUsuario.Password)
             {
                 throw Utils.APIError(
-                    0,
                     "No existe informacion para la combinacion de email y password suministrados",
                     StatusCodes.Status400BadRequest
                 );
@@ -102,7 +99,6 @@ public class UsuarioController : Controller
                 .ThenInclude(u => u.Rol)
                 .FirstOrDefault(e => e.Nombre == login.Identificacion)
             ?? throw Utils.APIError(
-                0,
                 "No existe informacion para la identificacion suministrada",
                 StatusCodes.Status400BadRequest
             );
@@ -112,7 +108,6 @@ public class UsuarioController : Controller
 
             var salt = rawUsuario.Salt
             ?? throw Utils.APIError(
-                0,
                 "Hubo un error al procesar la solicitud. Intentelo de nuevo",
                 StatusCodes.Status500InternalServerError
             );
@@ -124,7 +119,6 @@ public class UsuarioController : Controller
             if (hexPassword != rawUsuario.Password)
             {
                 throw Utils.APIError(
-                    0,
                     "Password anterior incorrecta",
                     StatusCodes.Status400BadRequest
                 );

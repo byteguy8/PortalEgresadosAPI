@@ -194,7 +194,7 @@ public class IdiomaController : ControllerBase
             {
                 transaction.Rollback();
 
-                var error = new ErrorMsg(0, $"Error inesperado");
+                var error = new ErrorMsg($"Error inesperado");
 
                 return Results.Json(data: error, statusCode: StatusCodes.Status500InternalServerError);
             }
@@ -212,7 +212,7 @@ public class IdiomaController : ControllerBase
 
             transaction?.Rollback();
 
-            var error = new ErrorMsg(0, "Error no esperado");
+            var error = new ErrorMsg("Error no esperado");
 
             return Results.Json(
                 data: error,
@@ -256,7 +256,7 @@ public class IdiomaController : ControllerBase
             {
                 transaction.Rollback();
 
-                var error = new ErrorMsg(0, $"Error inesperado");
+                var error = new ErrorMsg($"Error inesperado");
 
                 return Results.Json(data: error, statusCode: StatusCodes.Status500InternalServerError);
             }
@@ -274,7 +274,7 @@ public class IdiomaController : ControllerBase
 
             transaction?.Rollback();
 
-            var error = new ErrorMsg(0, "Error no esperado");
+            var error = new ErrorMsg("Error no esperado");
 
             return Results.Json(
                 data: error,
