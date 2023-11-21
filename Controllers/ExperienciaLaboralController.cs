@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -44,6 +45,7 @@ public class ExperienciaLaboralController : ControllerBase
 
     }
 
+    [Authorize]
     [HttpPost]
     public async Task<IResult> CreateExperienciaLaboralEgresado([FromBody] ExperienciaLaboralPOSTDTO experienciaLaboral)
     {
@@ -76,8 +78,8 @@ public class ExperienciaLaboralController : ControllerBase
 
     }
 
+    [Authorize]
     [HttpDelete]
-
     public async Task<IResult> DeleteExperienciaLaboralEgresado([FromQuery] int id)
     {
 

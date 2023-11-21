@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using PortalEgresadosAPI.Database.DTO;
@@ -42,7 +43,7 @@ public class ContactoController : ControllerBase
         }
     }
 
-
+    [Authorize]
     [HttpPost]
     public async Task<IResult> CreateContactoEgresado([FromBody] ContactoPOSTDTO contacto)
     {
@@ -70,7 +71,8 @@ public class ContactoController : ControllerBase
         }
        
     }
-
+    
+    [Authorize]
     [HttpDelete("{contactoId}")]
     public async Task<IResult> ContactoEgresado(int contactoId)
     {

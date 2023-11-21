@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -179,6 +180,7 @@ public class HabilidadController : ControllerBase
         }
     }
 
+    [Authorize]
     [HttpPost("{habilidadId}/{egresadoId}")]
     public IResult AgregarHabilidad(int habilidadId, int egresadoId)
     {
@@ -272,6 +274,7 @@ public class HabilidadController : ControllerBase
         }
     }
 
+    [Authorize]
     [HttpDelete("{habilidadEgresadoId}")]
     public IResult EliminarHabilidad(int habilidadEgresadoId)
     {

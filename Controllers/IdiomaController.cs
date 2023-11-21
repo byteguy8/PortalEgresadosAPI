@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
@@ -115,7 +116,7 @@ public class IdiomaController : ControllerBase
     }
 
     [HttpGet("{egresadoId}")]
-    public dynamic IdiomaEgresado(int egresadoId)
+    public IResult IdiomaEgresado(int egresadoId)
     {
 
         PortalEgresadosContext? context = null;
@@ -163,6 +164,7 @@ public class IdiomaController : ControllerBase
 
     }
 
+    [Authorize]
     [HttpPost("{egresadoId}/{idiomaId}")]
     public IResult PostIdiomaEgresado(int egresadoId, int idiomaId)
     {
@@ -225,6 +227,7 @@ public class IdiomaController : ControllerBase
         }
     }
 
+    [Authorize]
     [HttpDelete("{EgresadoIdiomaId}")]
     public IResult DeleteIdiomaEgresado(int EgresadoIdiomaId)
     {
