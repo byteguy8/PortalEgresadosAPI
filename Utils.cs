@@ -2,6 +2,7 @@ using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.OpenApi.Any;
 using PortalEgresadosAPI;
 
 public class Utils
@@ -109,7 +110,7 @@ public class Utils
         return rawEgresado.EgresadoId == egresadoId;
     }
 
-    public static dynamic ObtenerInfEgresado(PortalEgresadosContext context, Egresado rawEgresado)
+    public static dynamic ObtenerInfEgresado(PortalEgresadosContext context, Egresado rawEgresado, bool fullDestacado = false)
     {
         // Obteniendo los documentos del egresado
         var rawDocumentos = context
@@ -244,12 +245,48 @@ public class Utils
         }
 
         // Determinando si el egresado es destacado
-        var destacado = context
-            .EgresadoDestacados
-            .Where(d =>
-                d.EgresadoId == rawEgresado.EgresadoId &&
-                d.FechaHasta >= DateTime.Now
-            ).Any();
+        var destacado = false;
+        var infDestacado = new List<dynamic>();
+
+        if (fullDestacado)
+        {
+            var rawEgresadoDestacado = context
+                .EgresadoDestacados
+                .Where(ed => ed.EgresadoId == rawEgresado.EgresadoId)
+                .ToList();
+
+            if (rawEgresadoDestacado.Any())
+            {
+                foreach (var edestacado in rawEgresadoDestacado)
+                {
+                    var egresadoHasta = edestacado.FechaHasta;
+
+                    if (egresadoHasta >= DateTime.Now)
+                    {
+                        destacado = true;
+                    }
+
+                    dynamic ed = new
+                    {
+                        Observacion = edestacado.Observacion,
+                        FechaDesde = edestacado.FechaDesde,
+                        FechaHasta = edestacado.FechaHasta,
+                        Destacado = destacado
+                    };
+
+                    infDestacado.Add(ed);
+                }
+            }
+        }
+        else
+        {
+            destacado = context
+                .EgresadoDestacados
+                .Where(d =>
+                    d.EgresadoId == rawEgresado.EgresadoId &&
+                    d.FechaHasta >= DateTime.Now
+                ).Any();
+        }
 
         var ciudadDelEgresado = context
             .Egresados
@@ -293,7 +330,7 @@ public class Utils
             FotoPerfilUrl = fotoPerfilUrl,
             Acerca = acerca,
             Estado = activo,
-            Destacado = destacado,
+            Destacado = (object) (fullDestacado ? infDestacado : destacado),
             Nacionalidad = nacionalidad,
             EgresadoIdiomas = idiomas,
             ExperienciaLaborals = experiencias,
