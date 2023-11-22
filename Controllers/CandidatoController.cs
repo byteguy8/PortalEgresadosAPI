@@ -56,8 +56,8 @@ public class CandidatoController : ControllerBase
                 .Any();
 
             return Results.Ok(
-                esCandidatoDoctorado &&
-                esCandidatoMaestria &&
+                esCandidatoDoctorado ||
+                esCandidatoMaestria ||
                 esCandidatoGrado
             );
         }
