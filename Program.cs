@@ -4,6 +4,7 @@ using Microsoft.IdentityModel.Tokens;
 var builder = WebApplication.CreateBuilder(args);
 
 // Added by me
+builder.WebHost.UseUrls("http://0.0.0.0:5000");
 
 builder.Services.AddAuthorization();
 builder.Services.AddAuthentication("Bearer").AddJwtBearer(opt =>
