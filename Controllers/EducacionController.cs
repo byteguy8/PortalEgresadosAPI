@@ -61,6 +61,51 @@ public class EducacionController : ControllerBase
 
     }
 
+    [HttpGet]
+    public IResult ObtenerEducaciones()
+    {
+        try
+        {
+            using (var context = new PortalEgresadosContext())
+            {
+                var educaciones = context.Educacions.Include(e => e.Formacion)
+                    .Select(e => new
+                    {
+                        educacionId = e.EducacionId,
+                        egresadoId = e.EgresadoId,
+                        formacionId = e.FormacionId,
+                        nivel = e.Formacion.Nombre,
+                        organizacion = e.Organizacion,
+                        fechaEntrada = e.FechaEntrada,
+                        fechaSalida = e.FechaSalida
+                    }).ToList();
+
+                if (!educaciones.Any())
+                {
+                    return Results.Json(
+                        data: new ErrorResult(0, "No se encontraron registros de educación"),
+                        statusCode: StatusCodes.Status404NotFound
+                    );
+                }
+
+                return Results.Json(
+                    data: educaciones,
+                    statusCode: StatusCodes.Status200OK
+                );
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine(ex.Message);
+
+            return Results.Json(
+                data: new ErrorResult(0, "Error no esperado"),
+                statusCode: StatusCodes.Status500InternalServerError
+            );
+        }
+    }
+
+
     [HttpPost]
     public IResult AgregarEducacion([FromBody] EducacionPOSTDTO nuevaEducacionDto)
     {
@@ -116,11 +161,16 @@ public class EducacionController : ControllerBase
             using (var context = new PortalEgresadosContext())
             {
                 var educacion = context.Educacions.FirstOrDefault(e => e.EducacionId == educacionId);
-                if (educacion != null)
+                if (educacion == null)
                 {
-                    context.Educacions.Remove(educacion);
-                    context.SaveChanges();
+                    return Results.Json(
+                        data: new ErrorResult(0, "Educación no encontrada"),
+                        statusCode: StatusCodes.Status404NotFound
+                    );
                 }
+
+                context.Educacions.Remove(educacion);
+                context.SaveChanges();
             }
 
             return Results.Json(
